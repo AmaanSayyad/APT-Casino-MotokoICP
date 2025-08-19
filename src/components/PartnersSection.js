@@ -6,8 +6,8 @@ const PartnersSection = () => {
     {
       category: 'Blockchain',
       items: [
-        { id: 1, name: 'Aptos', logo: '/images/partners/aptos.svg' },
-        { id: 2, name: 'Aptos Labs', logo: '/images/partners/aptos.svg' },
+        { id: 1, name: 'ICP', logo: '/images/partners/aptos.svg' },
+        { id: 2, name: 'ICP Labs', logo: '/images/partners/aptos.svg' },
       ]
     },
     {

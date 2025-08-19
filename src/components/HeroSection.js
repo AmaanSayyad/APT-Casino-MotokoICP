@@ -34,13 +34,13 @@ export default function HeroSection() {
         `font-display capitalize flex text-white flex-col text-center items-center gap-6 z-10 max-w-7xl w-full mx-auto ${showAnnouncement ? '' : 'mt-14 sm:mt-14 md:mt-16'}`
       }>
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight">
-                        Enter the Aptos Gaming <br /> Arena:{" "}
+                        Enter the ICP Gaming <br /> Arena:{" "}
           <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-magic to-blue-magic">
             APT-Casino
           </span>
         </h1>
         <h2 className="text-[#B3B3B3] mt-4 text-lg sm:text-xl leading-relaxed max-w-2xl">
-          Dive into the next generation of gaming with APT-Casino – where every move is powered by <span className="text-white font-semibold">Aptos Blockchain</span>. Discover new games, connect
+          Dive into the next generation of gaming with APT-Casino – where every move is powered by <span className="text-white font-semibold">ICP Blockchain</span>. Discover new games, connect
           with friends, and unlock endless possibilities.
         </h2>
         

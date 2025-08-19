@@ -1,24 +1,24 @@
-// Aptos Network Configuration
+// ICP Network Configuration
 export const APTOS_NETWORKS = {
   TESTNET: 'testnet',
   MAINNET: 'mainnet',
   DEVNET: 'devnet'
 };
 
-// Aptos Network URLs
+// ICP Network URLs
 export const APTOS_NETWORK_URLS = {
   [APTOS_NETWORKS.TESTNET]: "https://fullnode.testnet.aptoslabs.com",
   [APTOS_NETWORKS.MAINNET]: "https://fullnode.mainnet.aptoslabs.com",
   [APTOS_NETWORKS.DEVNET]: "https://fullnode.devnet.aptoslabs.com"
 };
 
-// Aptos Faucet URLs
+// ICP Faucet URLs
 export const APTOS_FAUCET_URLS = {
   [APTOS_NETWORKS.TESTNET]: "https://faucet.testnet.aptoslabs.com",
   [APTOS_NETWORKS.DEVNET]: "https://faucet.devnet.aptoslabs.com"
 };
 
-// Aptos Explorer URLs
+// ICP Explorer URLs
 export const APTOS_EXPLORER_URLS = {
   [APTOS_NETWORKS.TESTNET]: "https://explorer.aptoslabs.com/account",
   [APTOS_NETWORKS.MAINNET]: "https://explorer.aptoslabs.com/account",
@@ -55,9 +55,9 @@ export const CASINO_MODULE_CONFIG = {
 
 // Token Configuration
 export const TOKEN_CONFIG = {
-  APT: {
-    name: "Aptos Coin",
-    symbol: "APT",
+  APTC: {
+    name: "ICP Coin",
+    symbol: "APTC",
     decimals: 8,
     type: "0x1::aptos_coin::AptosCoin"
   },
@@ -72,22 +72,22 @@ export const TOKEN_CONFIG = {
 // Network Information
 export const NETWORK_INFO = {
   [APTOS_NETWORKS.TESTNET]: {
-    name: "Aptos Testnet",
+    name: "ICP Testnet",
     chainId: 2,
-    nativeCurrency: TOKEN_CONFIG.APT,
+    nativeCurrency: TOKEN_CONFIG.APTC,
     explorer: APTOS_EXPLORER_URLS[APTOS_NETWORKS.TESTNET],
     faucet: APTOS_FAUCET_URLS[APTOS_NETWORKS.TESTNET]
   },
   [APTOS_NETWORKS.MAINNET]: {
-    name: "Aptos Mainnet",
+    name: "ICP Mainnet",
     chainId: 1,
-    nativeCurrency: TOKEN_CONFIG.APT,
+    nativeCurrency: TOKEN_CONFIG.APTC,
     explorer: APTOS_EXPLORER_URLS[APTOS_NETWORKS.MAINNET]
   },
   [APTOS_NETWORKS.DEVNET]: {
-    name: "Aptos Devnet",
+    name: "ICP Devnet",
     chainId: 0,
-    nativeCurrency: TOKEN_CONFIG.APT,
+    nativeCurrency: TOKEN_CONFIG.APTC,
     explorer: APTOS_EXPLORER_URLS[APTOS_NETWORKS.DEVNET],
     faucet: APTOS_FAUCET_URLS[APTOS_NETWORKS.DEVNET]
   }

@@ -36,7 +36,7 @@ import { setBalance, setLoading, loadBalanceFromStorage } from '@/store/balanceS
 import { aptosClient, CASINO_MODULE_ADDRESS, parseAptAmount, CasinoGames } from '@/lib/aptos';
 
 
-// Aptos wallet integration will be added here
+// ICP wallet integration will be added here
 
 const TooltipWide = styled(({ className, ...props }) => (
   <Tooltip {...props} classes={{ popper: className }} />
@@ -1161,7 +1161,7 @@ export default function GameRoulette() {
   const [bettingHistory, setBettingHistory] = useState([]);
   const [error, setError] = useState(null);
 
-  // Aptos wallet
+  // ICP wallet
   const { account, connected, signAndSubmitTransaction, wallet } = useWallet();
   const address = account?.address;
   const isConnected = !!connected;
@@ -1170,7 +1170,7 @@ export default function GameRoulette() {
   const { balance } = useToken(address); // Keep for compatibility
   const HOUSE_ADDR = CASINO_MODULE_ADDRESS;
 
-  // Function to fetch real APT balance
+  // Function to fetch real APTC balance
   const fetchRealBalance = useCallback(async () => {
     if (!account?.address) return;
 
@@ -1556,11 +1556,11 @@ export default function GameRoulette() {
     }
 
     // Check Redux balance instead of wallet
-    const currentBalance = parseFloat(userBalance || '0') / 100000000; // Convert from octas to APT
+    const currentBalance = parseFloat(userBalance || '0') / 100000000; // Convert from octas to APTC
     const totalBetAmount = total;
 
     if (currentBalance < totalBetAmount) {
-      alert(`Insufficient balance. You have ${currentBalance.toFixed(8)} APT but need ${totalBetAmount} APT`);
+      alert(`Insufficient balance. You have ${currentBalance.toFixed(8)} APTC but need ${totalBetAmount} APTC`);
       return;
     }
 
@@ -1582,7 +1582,7 @@ export default function GameRoulette() {
       
       // Check if user has enough balance
       if (originalBalance < totalBetAmount * 100000000) {
-        alert(`Insufficient balance. You have ${(originalBalance / 100000000).toFixed(8)} APT but need ${totalBetAmount} APT`);
+        alert(`Insufficient balance. You have ${(originalBalance / 100000000).toFixed(8)} APTC but need ${totalBetAmount} APTC`);
         setSubmitDisabled(false);
         setWheelSpinning(false);
         return;
@@ -1977,16 +1977,16 @@ export default function GameRoulette() {
         // Show result notification
         if (netResult > 0) {
           const winMessage = winningBets.length === 1
-            ? `🎉 WINNER! ${winningBets[0].name} - You won ${(netResult - totalBetAmount).toFixed(4)} APT!`
-            : `🎉 MULTIPLE WINNERS! ${winningBets.length} bets won - Total: ${(netResult - totalBetAmount).toFixed(4)} APT!`;
+            ? `🎉 WINNER! ${winningBets[0].name} - You won ${(netResult - totalBetAmount).toFixed(4)} APTC!`
+            : `🎉 MULTIPLE WINNERS! ${winningBets.length} bets won - Total: ${(netResult - totalBetAmount).toFixed(4)} APTC!`;
 
           setNotificationMessage(winMessage);
           setNotificationSeverity("success");
           setSnackbarMessage(winMessage);
         } else {
-          setNotificationMessage(`💸 Number ${winningNumber} - You lost ${totalBetAmount.toFixed(4)} APT!`);
+          setNotificationMessage(`💸 Number ${winningNumber} - You lost ${totalBetAmount.toFixed(4)} APTC!`);
           setNotificationSeverity("error");
-          setSnackbarMessage(`💸 Number ${winningNumber} - You lost ${totalBetAmount.toFixed(4)} APT!`);
+          setSnackbarMessage(`💸 Number ${winningNumber} - You lost ${totalBetAmount.toFixed(4)} APTC!`);
         }
         setSnackbarOpen(true);
 
@@ -2951,7 +2951,7 @@ export default function GameRoulette() {
               />
 
               <Typography color="white" sx={{ opacity: 0.8 }}>
-                Current Bet Total: {currency(total, { pattern: "#" }).format()} APT
+                Current Bet Total: {currency(total, { pattern: "#" }).format()} APTC
               </Typography>
 
               {/* Quick Bet Buttons */}
@@ -3026,7 +3026,7 @@ export default function GameRoulette() {
                       loading={submitDisabled}
                       onClick={lockBet}
                     >
-                      {total > 0 ? `Place Bet (${total.toFixed(2)} APT)` : 'Place Bet (APT)'}
+                      {total > 0 ? `Place Bet (${total.toFixed(2)} APTC)` : 'Place Bet (APTC)'}
                     </Button>
                     {submitDisabled && rollResult < 0 && (
                       <Typography color="white" sx={{ opacity: 0.8 }}>
@@ -3374,9 +3374,9 @@ export default function GameRoulette() {
             {notificationIndex === notificationSteps.RESULT_READY && (
               <Typography>
                 {winnings > 0
-                  ? `🎉 You won ${winnings.toFixed(4)} APT!`
+                  ? `🎉 You won ${winnings.toFixed(4)} APTC!`
                   : winnings < 0
-                  ? `💸 You lost ${Math.abs(winnings).toFixed(4)} APT!`
+                  ? `💸 You lost ${Math.abs(winnings).toFixed(4)} APTC!`
                   : "🤝 Break even!"}
               </Typography>
             )}

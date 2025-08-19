@@ -21,9 +21,9 @@ const WithdrawModal = ({ isOpen, onClose }) => {
   const { account, connected, signAndSubmitTransaction } = useWallet();
   const dispatch = useDispatch();
   
-  // Display balance in APT format
+  // Display balance in APTC format
   const balanceInApt = parseFloat(userBalance || '0') / 100000000;
-  const maxWithdraw = Math.max(0, balanceInApt - 0.01); // Reserve 0.01 APT for gas fees
+  const maxWithdraw = Math.max(0, balanceInApt - 0.01); // Reserve 0.01 APTC for gas fees
   
   useEffect(() => {
     if (!isOpen) {
@@ -51,12 +51,12 @@ const WithdrawModal = ({ isOpen, onClose }) => {
     }
     
     if (amount > maxWithdraw) {
-      setError(`Insufficient balance. Max withdraw: ${maxWithdraw.toFixed(4)} APT`);
+      setError(`Insufficient balance. Max withdraw: ${maxWithdraw.toFixed(4)} APTC`);
       return false;
     }
     
     if (amount < 0.001) {
-      setError('Minimum withdraw amount is 0.001 APT');
+      setError('Minimum withdraw amount is 0.001 APTC');
       return false;
     }
     
@@ -106,7 +106,7 @@ const WithdrawModal = ({ isOpen, onClose }) => {
       dispatch(setBalance(newBalanceOctas.toString()));
       
       setStep('success');
-      toast.success(`Successfully withdrew ${amount} APT! TX: ${result.transactionHash.slice(0, 8)}...`);
+      toast.success(`Successfully withdrew ${amount} APTC! TX: ${result.transactionHash.slice(0, 8)}...`);
       
       // Close modal after 3 seconds
       setTimeout(() => {
@@ -131,23 +131,23 @@ const WithdrawModal = ({ isOpen, onClose }) => {
               <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
                 <FaWallet className="text-2xl text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-white mb-2">Withdraw APT</h3>
+              <h3 className="text-2xl font-bold text-white mb-2">Withdraw APTC</h3>
               <p className="text-gray-400">Transfer your winnings to your wallet</p>
             </div>
             
             <div className="bg-gray-800/50 rounded-lg p-4">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-gray-400">Available Balance:</span>
-                <span className="text-white font-bold">{balanceInApt.toFixed(4)} APT</span>
+                <span className="text-white font-bold">{balanceInApt.toFixed(4)} APTC</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-400">Max Withdraw:</span>
-                <span className="text-green-400 font-bold">{maxWithdraw.toFixed(4)} APT</span>
+                <span className="text-green-400 font-bold">{maxWithdraw.toFixed(4)} APTC</span>
               </div>
             </div>
             
             <div>
-              <label className="block text-gray-300 mb-2">Withdraw Amount (APT)</label>
+              <label className="block text-gray-300 mb-2">Withdraw Amount (APTC)</label>
               <div className="relative">
                 <input
                   type="text"
@@ -204,7 +204,7 @@ const WithdrawModal = ({ isOpen, onClose }) => {
             <div className="bg-gray-800/50 rounded-lg p-4 space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-400">Withdraw Amount:</span>
-                <span className="text-white font-bold">{withdrawAmount} APT</span>
+                <span className="text-white font-bold">{withdrawAmount} APTC</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">To Wallet:</span>
@@ -212,12 +212,12 @@ const WithdrawModal = ({ isOpen, onClose }) => {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">Network Fee:</span>
-                <span className="text-yellow-400">~0.001 APT</span>
+                <span className="text-yellow-400">~0.001 APTC</span>
               </div>
               <hr className="border-gray-600" />
               <div className="flex justify-between">
                 <span className="text-gray-400">You'll Receive:</span>
-                <span className="text-green-400 font-bold">{(parseFloat(withdrawAmount) - 0.001).toFixed(4)} APT</span>
+                <span className="text-green-400 font-bold">{(parseFloat(withdrawAmount) - 0.001).toFixed(4)} APTC</span>
               </div>
             </div>
             
@@ -250,7 +250,7 @@ const WithdrawModal = ({ isOpen, onClose }) => {
             <div className="bg-gray-800/50 rounded-lg p-4">
               <div className="flex justify-between mb-2">
                 <span className="text-gray-400">Amount:</span>
-                <span className="text-white font-bold">{withdrawAmount} APT</span>
+                <span className="text-white font-bold">{withdrawAmount} APTC</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">Status:</span>
@@ -267,12 +267,12 @@ const WithdrawModal = ({ isOpen, onClose }) => {
               <FaCheck className="text-2xl text-white" />
             </div>
             <h3 className="text-2xl font-bold text-white mb-2">Withdrawal Successful!</h3>
-            <p className="text-gray-400">Your APT has been sent to your wallet</p>
+            <p className="text-gray-400">Your APTC has been sent to your wallet</p>
             
             <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4">
               <div className="flex justify-between mb-2">
                 <span className="text-gray-400">Amount Sent:</span>
-                <span className="text-green-400 font-bold">{withdrawAmount} APT</span>
+                <span className="text-green-400 font-bold">{withdrawAmount} APTC</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">To Wallet:</span>

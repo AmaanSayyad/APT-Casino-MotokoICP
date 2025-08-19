@@ -38,7 +38,7 @@ export function WalletStatusProvider({ children }) {
       setDevWallet({
         isConnected: true,
         address: '0x1234...dev',
-        chain: { id: 'aptos_testnet', name: 'Aptos Testnet' },
+        chain: { id: 'aptos_testnet', name: 'ICP Testnet' },
       });
     }
 
@@ -54,7 +54,7 @@ export function WalletStatusProvider({ children }) {
           ? {
               isConnected: true,
               address: '0x1234...dev',
-              chain: { id: 'aptos_testnet', name: 'Aptos Testnet' },
+              chain: { id: 'aptos_testnet', name: 'ICP Testnet' },
             }
           : {
               isConnected: false,

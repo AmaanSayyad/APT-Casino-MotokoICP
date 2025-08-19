@@ -86,7 +86,7 @@ export default function GameControls({ onBet, onRowChange, onRiskLevelChange, on
     const currentBalanceReduxUnit = parseFloat(userBalance);
     const currentBalanceAPT = currentBalanceReduxUnit / 100000000;
     
-    console.log('handleBet called with betValue:', betValue, 'currentBalance (APT):', currentBalanceAPT);
+    console.log('handleBet called with betValue:', betValue, 'currentBalance (APTC):', currentBalanceAPT);
     
     if (betValue <= 0) {
       alert("Please enter a valid bet amount");
@@ -94,7 +94,7 @@ export default function GameControls({ onBet, onRowChange, onRiskLevelChange, on
     }
     
     if (betValue > currentBalanceAPT) {
-      alert(`Insufficient balance! You have ${currentBalanceAPT.toFixed(3)} APT but need ${betValue} APT`);
+      alert(`Insufficient balance! You have ${currentBalanceAPT.toFixed(3)} APTC but need ${betValue} APTC`);
       return;
     }
     
@@ -131,7 +131,7 @@ export default function GameControls({ onBet, onRowChange, onRiskLevelChange, on
     });
     
     if (totalBetAmountInReduxUnit > currentBalance) {
-      alert(`Insufficient balance for ${totalBets} bets of ${betAmount} APT each. You need ${totalBetAmount.toFixed(3)} APT but have ${(currentBalance / 100000000).toFixed(3)} APT`);
+      alert(`Insufficient balance for ${totalBets} bets of ${betAmount} APTC each. You need ${totalBetAmount.toFixed(3)} APTC but have ${(currentBalance / 100000000).toFixed(3)} APTC`);
       setIsAutoPlaying(false);
       return;
     }
@@ -243,7 +243,7 @@ export default function GameControls({ onBet, onRowChange, onRiskLevelChange, on
     return totalBetAmountInReduxUnit <= currentBalance && betValue > 0;
   };
 
-  // Get current balance in APT for display
+  // Get current balance in APTC for display
   const getCurrentBalanceInAPT = () => {
     return (parseFloat(userBalance) / 100000000).toFixed(3);
   };
@@ -282,7 +282,7 @@ export default function GameControls({ onBet, onRowChange, onRiskLevelChange, on
           Bet Amount
         </label>
         <div className="mb-2">
-          <span className="text-2xl font-bold text-white">{betAmount} APT</span>
+          <span className="text-2xl font-bold text-white">{betAmount} APTC</span>
         </div>
         <div className="relative">
           <input
@@ -337,37 +337,37 @@ export default function GameControls({ onBet, onRowChange, onRiskLevelChange, on
             onClick={() => handleBetAmountChange(0.01)}
             className="bg-[#2A0025] border border-[#333947] rounded-lg py-2 text-xs text-white hover:bg-[#3A0035] transition-colors"
           >
-            0.01 APT
+            0.01 APTC
           </button>
           <button
             onClick={() => handleBetAmountChange(0.05)}
             className="bg-[#2A0025] border border-[#333947] rounded-lg py-2 text-xs text-white hover:bg-[#3A0025] transition-colors"
           >
-            0.05 APT
+            0.05 APTC
           </button>
           <button
             onClick={() => handleBetAmountChange(0.1)}
             className="bg-[#2A0025] border border-[#333947] rounded-lg py-2 text-xs text-white hover:bg-[#3A0035] transition-colors"
           >
-            0.1 APT
+            0.1 APTC
           </button>
           <button
             onClick={() => handleBetAmountChange(0.25)}
             className="bg-[#2A0025] border border-[#333947] rounded-lg py-2 text-xs text-white hover:bg-[#3A0035] transition-colors"
           >
-            0.25 APT
+            0.25 APTC
           </button>
           <button
             onClick={() => handleBetAmountChange(0.5)}
             className="bg-[#2A0025] border border-[#333947] rounded-lg py-2 text-xs text-white hover:bg-[#3A0035] transition-colors"
           >
-            0.5 APT
+            0.5 APTC
           </button>
           <button
             onClick={() => handleBetAmountChange(1)}
             className="bg-[#2A0025] border border-[#333947] rounded-lg py-2 text-xs text-white hover:bg-[#3A0025] transition-colors"
           >
-            1.0 APT
+            1.0 APTC
           </button>
         </div>
       </div>
@@ -471,7 +471,7 @@ export default function GameControls({ onBet, onRowChange, onRiskLevelChange, on
           {/* Current Balance Display */}
           <div className="text-center p-3 bg-[#2A0025] rounded-lg border border-[#333947]">
             <span className="text-sm text-gray-400">Current Balance:</span>
-            <div className="text-lg font-bold text-green-400">{getCurrentBalanceInAPT()} APT</div>
+            <div className="text-lg font-bold text-green-400">{getCurrentBalanceInAPT()} APTC</div>
           </div>
           
           {/* Bet Button */}
@@ -491,8 +491,8 @@ export default function GameControls({ onBet, onRowChange, onRiskLevelChange, on
           {((gameMode === "auto" && !hasSufficientBalanceForAutoBet()) || (!gameMode === "auto" && !hasSufficientBalance())) && parseFloat(betAmount) > 0 && (
             <div className="text-center text-red-400 text-sm">
               {gameMode === "auto" 
-                ? `Insufficient balance for ${numberOfBets} bets of ${betAmount} APT each` 
-                : `Insufficient balance for ${betAmount} APT bet`
+                ? `Insufficient balance for ${numberOfBets} bets of ${betAmount} APTC each` 
+                : `Insufficient balance for ${betAmount} APTC bet`
               }
             </div>
           )}

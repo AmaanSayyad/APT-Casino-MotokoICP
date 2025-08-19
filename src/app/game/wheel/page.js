@@ -80,15 +80,15 @@ export default function Home() {
 
     // Check if wallet is connected first
     if (!window.aptos || !window.aptos.account) {
-      alert('Please connect your Aptos wallet first');
+      alert('Please connect your ICP wallet first');
       return;
     }
 
     // Check Redux balance
-    const currentBalance = parseFloat(userBalance || '0') / 100000000; // Convert from octas to APT
+    const currentBalance = parseFloat(userBalance || '0') / 100000000; // Convert from octas to APTC
     
     if (currentBalance < betAmount) {
-      alert(`Insufficient balance. You have ${currentBalance.toFixed(8)} APT but need ${betAmount} APT`);
+      alert(`Insufficient balance. You have ${currentBalance.toFixed(8)} APTC but need ${betAmount} APTC`);
       return;
     }
 
@@ -97,8 +97,8 @@ export default function Home() {
       setHasSpun(false);
 
       console.log('=== STARTING WHEEL BET WITH REDUX BALANCE ===');
-      console.log('Bet amount (APT):', betAmount);
-      console.log('Current balance (APT):', currentBalance);
+      console.log('Bet amount (APTC):', betAmount);
+      console.log('Current balance (APTC):', currentBalance);
       console.log('Sectors:', noOfSegments);
       
       // Deduct bet amount from Redux balance
@@ -106,7 +106,7 @@ export default function Home() {
       const newBalance = (parseFloat(userBalance || '0') - betAmountInOctas).toString();
       dispatch(setBalance(newBalance));
       
-      console.log('Balance deducted. New balance:', (parseFloat(newBalance) / 100000000).toFixed(8), 'APT');
+      console.log('Balance deducted. New balance:', (parseFloat(newBalance) / 100000000).toFixed(8), 'APTC');
       
       // Set up callback to handle wheel animation completion
       window.wheelBetCallback = (landedMultiplier) => {
@@ -156,7 +156,7 @@ export default function Home() {
           
           // Show result and update balance
           if (actualMultiplier > 0) {
-            notification.success(`Congratulations! ${betAmount} APT × ${actualMultiplier.toFixed(2)} = ${winAmount.toFixed(8)} APT won!`);
+            notification.success(`Congratulations! ${betAmount} APTC × ${actualMultiplier.toFixed(2)} = ${winAmount.toFixed(8)} APTC won!`);
             
             // Update balance with winnings
             const currentBalanceOctas = parseFloat(userBalance || '0');
@@ -201,7 +201,7 @@ export default function Home() {
   }) => {
     // Check if wallet is connected first
     if (!window.aptos || !window.aptos.account) {
-      alert('Please connect your Aptos wallet first');
+      alert('Please connect your ICP wallet first');
       return;
     }
     
@@ -212,10 +212,10 @@ export default function Home() {
 
     for (let i = 0; i < numberOfBets; i++) {
       // Check Redux balance before each bet
-      const currentBalance = parseFloat(userBalance || '0') / 100000000; // Convert from octas to APT
+      const currentBalance = parseFloat(userBalance || '0') / 100000000; // Convert from octas to APTC
       
       if (currentBalance < currentBet) {
-        alert(`Insufficient balance for bet ${i + 1}. Need ${currentBet} APT but have ${currentBalance.toFixed(8)} APT`);
+        alert(`Insufficient balance for bet ${i + 1}. Need ${currentBet} APTC but have ${currentBalance.toFixed(8)} APTC`);
         break;
       }
 
@@ -301,7 +301,7 @@ export default function Home() {
 
       // Update Redux balance with winnings
       if (actualMultiplier > 0) {
-        const currentBalance = parseFloat(userBalance || '0') / 100000000; // Convert from octas to APT
+        const currentBalance = parseFloat(userBalance || '0') / 100000000; // Convert from octas to APTC
         const newBalanceWithWin = currentBalance + winAmount;
         const newBalanceWithWinOctas = Math.floor(newBalanceWithWin * 100000000); // Convert back to octas
         dispatch(setBalance(newBalanceWithWinOctas.toString()));
@@ -313,7 +313,7 @@ export default function Home() {
       
       // Show notification for win
       if (actualMultiplier > 0) {
-        notification.success(`Congratulations! ${currentBet} APT × ${actualMultiplier.toFixed(2)} = ${winAmount.toFixed(8)} APT won!`);
+        notification.success(`Congratulations! ${currentBet} APTC × ${actualMultiplier.toFixed(2)} = ${winAmount.toFixed(8)} APTC won!`);
       }
 
       // Store history entry
@@ -537,7 +537,7 @@ export default function Home() {
               setGameMode={setGameMode}
               betAmount={betAmount}
               setBetAmount={setBetAmount}
-              balance={parseFloat(userBalance || '0') / 100000000} // Convert from octas to APT
+              balance={parseFloat(userBalance || '0') / 100000000} // Convert from octas to APTC
               manulBet={manulBet}
               risk={selectedRisk}
               setRisk={setSelectedRisk}

@@ -37,17 +37,17 @@ export async function POST(request) {
     
     const coinClient = new CoinClient(client);
     
-    // Convert amount to octas (APT has 8 decimal places)
+    // Convert amount to octas (APTC has 8 decimal places)
     const amountOctas = Math.floor(amount * 100000000);
     
-    console.log(`🏦 Processing withdrawal: ${amount} APT to ${userAddress}`);
+    console.log(`🏦 Processing withdrawal: ${amount} APTC to ${userAddress}`);
     console.log(`📍 Treasury: ${treasuryAccount.address().hex()}`);
     
     // Check treasury balance
     let treasuryBalance = 0;
     try {
       treasuryBalance = await coinClient.checkBalance(treasuryAccount);
-      console.log(`💰 Treasury balance: ${treasuryBalance / 100000000} APT`);
+      console.log(`💰 Treasury balance: ${treasuryBalance / 100000000} APTC`);
     } catch (balanceError) {
       console.log('⚠️ Could not check treasury balance, proceeding with transfer attempt...');
       console.log('Balance error:', balanceError.message);
@@ -55,12 +55,12 @@ export async function POST(request) {
     
     if (treasuryBalance > 0 && treasuryBalance < amountOctas) {
       return NextResponse.json(
-        { error: `Insufficient treasury funds. Available: ${treasuryBalance / 100000000} APT, Requested: ${amount} APT` },
+        { error: `Insufficient treasury funds. Available: ${treasuryBalance / 100000000} APTC, Requested: ${amount} APTC` },
         { status: 400 }
       );
     }
     
-    // Transfer APT from treasury to user
+    // Transfer APTC from treasury to user
     // Convert userAddress to hex string if it's an object
     let formattedUserAddress;
     if (typeof userAddress === 'object' && userAddress.data) {
@@ -86,7 +86,7 @@ export async function POST(request) {
     // Wait for transaction confirmation
     await client.waitForTransaction(txnHash);
     
-    console.log(`✅ Withdrawal successful: ${amount} APT to ${userAddress}, TX: ${txnHash}`);
+    console.log(`✅ Withdrawal successful: ${amount} APTC to ${userAddress}, TX: ${txnHash}`);
     
     return NextResponse.json({
       success: true,
@@ -131,7 +131,7 @@ export async function GET() {
       
       return NextResponse.json({
         treasuryAddress: treasuryAccount.address().hex(),
-        balance: balance / 100000000, // Convert to APT
+        balance: balance / 100000000, // Convert to APTC
         balanceOctas: balance.toString(),
         status: 'active'
       });

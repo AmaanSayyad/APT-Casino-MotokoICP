@@ -1,7 +1,7 @@
 import { AptosWalletAdapterProvider, useWallet } from "@aptos-labs/wallet-adapter-react";
 import { WalletReadyState } from "@aptos-labs/wallet-adapter-core";
 
-// Import Aptos network configuration
+// Import ICP network configuration
 import { APTOS_NETWORKS, DEFAULT_NETWORK } from './aptos';
 
 // Configure wallets - for now we'll use a simplified approach
@@ -28,7 +28,7 @@ export const AptosWalletProvider = ({ children }) => {
       plugins={wallets}
       autoConnect={autoConnect}
       onError={(error) => {
-        console.error("Aptos wallet error:", error);
+        console.error("ICP wallet error:", error);
       }}
     >
       {children}
