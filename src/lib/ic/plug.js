@@ -52,10 +52,11 @@ export const onLockStateChange = (cb) => {
 // Helper to persist connection across navigations
 export const ensurePersistentConnection = async ({ whitelist = [], host = 'https://icp0.io' } = {}) => {
   if (!isPlugAvailable()) return false;
+  const normalizedHost = host.replace('localhost', '127.0.0.1');
   const connected = await isConnected();
   if (!connected) {
     try {
-      await requestConnect({ whitelist, host });
+      await requestConnect({ whitelist, host: normalizedHost });
       return true;
     } catch {
       return false;
@@ -64,11 +65,15 @@ export const ensurePersistentConnection = async ({ whitelist = [], host = 'https
   return true;
 };
 
-export const createActor = async ({ canisterId, idlFactory }) => {
+export const createActor = async ({ canisterId, idlFactory, host }) => {
   if (!isPlugAvailable()) throw new Error('Plug is not available');
   if (!canisterId) throw new Error('Missing canisterId');
   if (!idlFactory) throw new Error('Missing idlFactory');
-  return window.ic.plug.createActor({ canisterId, interfaceFactory: idlFactory });
+  try {
+    return await window.ic.plug.createActor({ canisterId, interfaceFactory: idlFactory, host: host ? host.replace('localhost', '127.0.0.1') : undefined });
+  } catch (e) {
+    return await window.ic.plug.createActor({ canisterId, interfaceFactory: idlFactory });
+  }
 };
 
 

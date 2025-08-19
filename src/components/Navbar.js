@@ -13,6 +13,7 @@ import PlugConnectWalletButton from "./PlugConnectWalletButton";
 
 import { useNotification } from './NotificationSystem';
 import { getCasinoActor } from '@/lib/ic/actors';
+import { Principal } from '@dfinity/principal';
 
 // Mock search results for demo purposes
 const MOCK_SEARCH_RESULTS = {
@@ -88,7 +89,7 @@ export default function Navbar() {
     try {
       dispatch(setLoading(true));
       const actor = await getCasinoActor();
-      const balance = await actor.get_balance_of(address);
+      const balance = await actor.get_balance_of(Principal.fromText(address));
       dispatch(setBalance(String(balance)));
     } catch (error) {
       console.error('Error loading user balance:', error);
@@ -225,16 +226,17 @@ export default function Navbar() {
     setIsDepositing(true);
     try {
       const actor = await getCasinoActor();
-      const amountNat = Math.floor(amount * 100000000);
+      const amountNat = BigInt(Math.floor(amount * 100000000));
       await actor.deposit(amountNat);
-      const newBal = await actor.get_balance_of(address);
+      const newBal = await actor.get_balance_of(Principal.fromText(address));
       dispatch(setBalance(String(newBal)));
       notification.success(`Successfully deposited ${amount} Cycles to house balance!`);
       setDepositAmount("");
       
     } catch (error) {
       console.error('Deposit error:', error);
-      notification.error(`Deposit failed: ${error.message}`);
+      const msg = (error && (error.message || (typeof error === 'string' ? error : 'Unknown error'))) || 'Unknown error';
+      notification.error(`Deposit failed: ${msg}`);
     } finally {
       setIsDepositing(false);
     }

@@ -1,14 +1,43 @@
 import Nat "mo:base/Nat";
 import Nat8 "mo:base/Nat8";
 import HashMap "mo:base/HashMap";
+import Hash "mo:base/Hash";
+import Nat32 "mo:base/Nat32";
 import Principal "mo:base/Principal";
 import Blob "mo:base/Blob";
 import Random "mo:base/Random";
-import Int "mo:base/Int";
+import Iter "mo:base/Iter";
+// import Int "mo:base/Int"; // not used
 
 actor {
-  // Balance map in cycles (for demo only; not production-grade)
-  stable var balances : HashMap.HashMap<Principal, Nat> = HashMap.HashMap<Principal, Nat>(10, Principal.equal, Principal.hash);
+  // Balance map in cycles (demo only)
+  let principalHash = func (p : Principal) : Hash.Hash {
+    // 32-bit rolling hash; return Nat32 (Hash.Hash)
+    var acc : Nat32 = 2166136261;
+    let C : Nat32 = Nat32.fromNat(16777619);
+    for (b in Blob.toArray(Principal.toBlob(p)).vals()) {
+      let v : Nat32 = Nat32.fromNat(Nat8.toNat(b));
+      acc := acc +% v;
+      acc := acc *% C;
+    };
+    acc
+  };
+  var balances : HashMap.HashMap<Principal, Nat> = HashMap.HashMap<Principal, Nat>(10, Principal.equal, principalHash);
+
+  // Persist balances across upgrades using stable entries snapshot
+  stable var balancesEntries : [(Principal, Nat)] = [];
+
+  system func preupgrade() {
+    balancesEntries := Iter.toArray(balances.entries());
+  };
+
+  system func postupgrade() {
+    // Recreate the in-memory map from the stable snapshot
+    balances := HashMap.HashMap<Principal, Nat>(balancesEntries.size(), Principal.equal, principalHash);
+    for ((p, n) in balancesEntries.vals()) {
+      balances.put(p, n);
+    };
+  };
 
   public query func get_balance_of(p : Principal) : async Nat {
     switch (balances.get(p)) {
@@ -89,7 +118,9 @@ actor {
   };
 
   func pick_mines(seedNat : Nat, boardSize : Nat, numMines : Nat) : HashMap.HashMap<Nat, Nat> {
-    let set = HashMap.HashMap<Nat, Nat>(boardSize, Nat.equal, Nat.hash);
+    let P32 : Nat = 4294967296; // 2^32
+    let natHash = func (n : Nat) : Hash.Hash { Nat32.fromNat(n % P32) };
+    let set = HashMap.HashMap<Nat, Nat>(boardSize, Nat.equal, natHash);
     if (boardSize == 0 or numMines == 0) return set;
     if (numMines >= boardSize) {
       var idx : Nat = 0;

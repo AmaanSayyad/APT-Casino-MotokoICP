@@ -246,6 +246,18 @@
     "@babel/helper-string-parser" "^7.27.1"
     "@babel/helper-validator-identifier" "^7.27.1"
 
+"@dfinity/candid@^3.2.1":
+  version "3.2.1"
+  resolved "https://registry.npmjs.org/@dfinity/candid/-/candid-3.2.1.tgz"
+  integrity sha512-fKrkW7TAx2MX+1XPfSE6cQPeFsNs3c4g0JdoL7uw2JONqPT7eOV1o7Oqr/I+4coITvD3hIDZcnD4IxiIjQF+NQ==
+
+"@dfinity/principal@^3.2.1", "@dfinity/principal@3.2.1":
+  version "3.2.1"
+  resolved "https://registry.npmjs.org/@dfinity/principal/-/principal-3.2.1.tgz"
+  integrity sha512-W2otaFOeyqWNMi/E+vaxpp7CcGTkxol9FYqUMtdoLg27QMZvUgQ72ljLkkxXrUlGPrORTzkR5DMCCrkziB7MVw==
+  dependencies:
+    "@noble/hashes" "^1.8.0"
+
 "@dimforge/rapier3d-compat@^0.12.0":
   version "0.12.0"
   resolved "https://registry.npmjs.org/@dimforge/rapier3d-compat/-/rapier3d-compat-0.12.0.tgz"
@@ -709,7 +721,7 @@
   dependencies:
     "@noble/hashes" "1.8.0"
 
-"@noble/hashes@^1.3.1", "@noble/hashes@^1.5.0", "@noble/hashes@~1.8.0", "@noble/hashes@1.8.0":
+"@noble/hashes@^1.3.1", "@noble/hashes@^1.5.0", "@noble/hashes@^1.8.0", "@noble/hashes@~1.8.0", "@noble/hashes@1.8.0":
   version "1.8.0"
   resolved "https://registry.npmjs.org/@noble/hashes/-/hashes-1.8.0.tgz"
   integrity sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A==
