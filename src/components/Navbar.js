@@ -12,6 +12,7 @@ import PlugConnectWalletButton from "./PlugConnectWalletButton";
 
 
 import { useNotification } from './NotificationSystem';
+import { getCasinoActor } from '@/lib/ic/actors';
 
 // Mock search results for demo purposes
 const MOCK_SEARCH_RESULTS = {
@@ -86,8 +87,9 @@ export default function Navbar() {
     if (!address) return;
     try {
       dispatch(setLoading(true));
-      const savedBalance = loadBalanceFromStorage();
-      dispatch(setBalance(savedBalance || '0'));
+      const actor = await getCasinoActor();
+      const balance = await actor.get_balance_of(address);
+      dispatch(setBalance(String(balance)));
     } catch (error) {
       console.error('Error loading user balance:', error);
       dispatch(setBalance("0"));
@@ -191,9 +193,10 @@ export default function Navbar() {
         notification.error('No balance to withdraw');
         return;
       }
-      // Placeholder: zero-out local balance until IC withdraw is implemented
+      const actor = await getCasinoActor();
+      const withdrawn = await actor.withdraw_all();
       dispatch(setBalance('0'));
-      notification.success(`Successfully withdrew ${balanceInApt.toFixed(4)} Cycles!`);
+      notification.success(`Successfully withdrew ${(Number(withdrawn) / 100000000).toFixed(4)} Cycles!`);
       
       // Close the modal
       setShowBalanceModal(false);
@@ -221,10 +224,11 @@ export default function Navbar() {
 
     setIsDepositing(true);
     try {
-      // Update local balance immediately (placeholder until IC canister wiring)
-      const currentBalance = parseFloat(userBalance || '0');
-      const newBalance = (currentBalance + (amount * 100000000)).toString();
-      dispatch(setBalance(newBalance));
+      const actor = await getCasinoActor();
+      const amountNat = Math.floor(amount * 100000000);
+      await actor.deposit(amountNat);
+      const newBal = await actor.get_balance_of(address);
+      dispatch(setBalance(String(newBal)));
       notification.success(`Successfully deposited ${amount} Cycles to house balance!`);
       setDepositAmount("");
       

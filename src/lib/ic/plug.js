@@ -64,4 +64,11 @@ export const ensurePersistentConnection = async ({ whitelist = [], host = 'https
   return true;
 };
 
+export const createActor = async ({ canisterId, idlFactory }) => {
+  if (!isPlugAvailable()) throw new Error('Plug is not available');
+  if (!canisterId) throw new Error('Missing canisterId');
+  if (!idlFactory) throw new Error('Missing idlFactory');
+  return window.ic.plug.createActor({ canisterId, interfaceFactory: idlFactory });
+};
+
 
