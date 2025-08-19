@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "canisters": {
+    "backend": {
+      "type": "motoko",
+      "main": "backend/app.mo",
+      "candid": "backend/backend.did"
+    },
+    "frontend": {
+      "type": "assets",
+      "source": [
+        "frontend"
+      ]
+    }
+  },
+  "networks": {
+    "local": {
+      "bind": "127.0.0.1:4943",
+      "type": "ephemeral"
+    },
+    "playground": {
+      "playground": {
+        "playground_canister": "<POOL_CANISTER_ID>",
+        "timeout_seconds": 1200
+      },
+      "providers": [
+        "https://icp0.io"
+      ]
+    }
+  }
+}

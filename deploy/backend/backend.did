@@ -1,0 +1,14 @@
+service : {
+  get_balance_of: (principal) -> (nat) query;
+  deposit: (nat) -> ();
+  withdraw_all: () -> (nat);
+  random_blob: () -> (blob);
+  random_nat: (nat) -> (nat);
+  play_roulette: () -> (nat);
+  play_plinko: (nat) -> (nat);
+  play_wheel: (nat) -> (nat);
+  start_mines: () -> (blob);
+  mines_is_safe: (blob, nat, nat, nat) -> (bool);
+}
+
+
