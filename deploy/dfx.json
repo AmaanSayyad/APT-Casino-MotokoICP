@@ -6,6 +6,10 @@
       "main": "backend/app.mo",
       "candid": "backend/backend.did"
     },
+    "aptc_token": {
+      "type": "motoko",
+      "main": "token/app.mo"
+    },
     "frontend": {
       "type": "assets",
       "source": [

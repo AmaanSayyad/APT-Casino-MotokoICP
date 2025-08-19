@@ -4,6 +4,7 @@ import { idlFactory as casinoIdl } from '@/ic/casino_backend/casino_backend.idl'
 
 export const getCasinoActor = async () => {
   if (!CASINO_CANISTER_ID) throw new Error('CASINO_CANISTER_ID is not set');
+  // Only check status; do not trigger extra connect prompts
   await ensurePersistentConnection({ whitelist: [CASINO_CANISTER_ID], host: IC_HOST });
   return createActor({ canisterId: CASINO_CANISTER_ID, idlFactory: casinoIdl, host: IC_HOST });
 };

@@ -1,7 +1,15 @@
 service : {
   get_balance_of: (principal) -> (nat) query;
+  set_token_canister: (principal) -> ();
+  set_self_principal: (principal) -> ();
+  set_deposit_policy: (bool, nat, nat) -> ();
+  get_deposit_policy: () -> (bool, nat, nat) query;
+  get_deposit_usage: (principal) -> (nat64, nat) query;
+  mint_to_caller: (nat) -> ();
+  deposit_via_approve: (nat) -> ();
   deposit: (nat) -> ();
   withdraw_all: () -> (nat);
+  withdraw: (nat) -> (nat);
   random_blob: () -> (blob);
   random_nat: (nat) -> (nat);
   play_roulette: () -> (nat);

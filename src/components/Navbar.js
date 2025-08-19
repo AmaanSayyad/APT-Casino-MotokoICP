@@ -88,31 +88,27 @@ export default function Navbar() {
     if (!address) return;
     try {
       dispatch(setLoading(true));
-      const actor = await getCasinoActor();
-      const balance = await actor.get_balance_of(Principal.fromText(address));
-      dispatch(setBalance(String(balance)));
+      const saved = loadBalanceFromStorage();
+      dispatch(setBalance(saved || '0'));
     } catch (error) {
-      console.error('Error loading user balance:', error);
-      dispatch(setBalance("0"));
+      console.error('Error loading user balance (local):', error);
+      dispatch(setBalance('0'));
     } finally {
       dispatch(setLoading(false));
     }
   };
 
-  // Load balance when wallet connects
+  // Load balance when wallet connects (local only, immediate)
   useEffect(() => {
-    if (isWalletReady && address) {
-      // First try to load from localStorage
-      const savedBalance = loadBalanceFromStorage();
-      if (savedBalance && savedBalance !== "0") {
-        console.log('Loading saved balance from localStorage:', savedBalance);
-        dispatch(setBalance(savedBalance));
-      } else {
-        // If no saved balance, load from blockchain
-        loadUserBalance();
-      }
+    if (isConnected && address) {
+      loadUserBalance();
     }
-  }, [isWalletReady, address]);
+    const onPlugConnected = () => {
+      if (isConnected && address) loadUserBalance();
+    };
+    window.addEventListener('plug-connected', onPlugConnected);
+    return () => window.removeEventListener('plug-connected', onPlugConnected);
+  }, [isConnected, address]);
 
   // Plug persistence handled internally; no Aptos reconnect
 
@@ -617,13 +613,13 @@ export default function Navbar() {
 
           
           {/* User Balance Display */}
-          {isWalletReady && (
+          {isConnected && (
             <div className="flex items-center space-x-3">
               <div className="bg-gradient-to-r from-green-900/20 to-green-800/10 rounded-lg border border-green-800/30 px-3 py-2">
                 <div className="flex items-center space-x-2">
                   <span className="text-xs text-gray-300">Balance:</span>
                   <span className="text-sm text-green-300 font-medium">
-                    {isLoadingBalance ? 'Loading...' : `${(parseFloat(userBalance) / 100000000).toFixed(3)} Cycles`}
+                    {isLoadingBalance ? 'Loading...' : `${(parseFloat(userBalance || '0') / 100000000).toFixed(3)} APTC`}
                   </span>
                   <button
                     onClick={() => setShowBalanceModal(true)}
