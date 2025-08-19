@@ -2,22 +2,14 @@
 import { useState } from "react";
 
 export default function GameHistory({ history }) {
-  const [visibleCount, setVisibleCount] = useState(5);
+  const visibleCount = 5;
 
   return (
     <div>
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold text-white">Game History</h3>
-        {/* Show more control */}
-        {history.length > visibleCount && (
-          <button
-            onClick={() => setVisibleCount((c) => Math.min(c + 5, history.length))}
-            className="bg-[#2A0025] border border-[#333947] rounded-lg px-3 py-2 text-sm text-white hover:bg-[#3A0035] transition-colors"
-          >
-            Show more
-          </button>
-        )}
+        {/* Show more removed */}
       </div>
 
       {/* Game History Table */}
@@ -88,10 +80,7 @@ export default function GameHistory({ history }) {
         </div>
       )}
 
-      {/* Info */}
-      <div className="mt-4 text-center text-gray-400 text-sm">
-        Showing {Math.min(visibleCount, history.length)} of {history.length} entries
-      </div>
+      {/* Info removed */}
     </div>
   );
 }

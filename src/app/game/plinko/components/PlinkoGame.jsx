@@ -752,8 +752,8 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "Medium", onRowChang
             <div className="space-y-2">
               {betHistory.slice(0, visibleHistoryCount).map((bet, index) => (
                 <div key={index} className="w-16 h-16 bg-[#2A0025] border border-[#333947] rounded-lg flex flex-col items-center justify-center p-1">
-                  <span className="text-xs font-bold text-white">{bet.multiplier}</span>
-                  <span className="text-[10px] text-green-400">+{bet.payout} APTC</span>
+                  <span className="text-xs font-bold text-white text-center">{bet.multiplier}</span>
+                  <span className="text-[10px] text-green-400 text-center leading-tight">+{bet.payout} APTC</span>
                 </div>
               ))}
               {/* Fill up to initial 5 slots only when fewer than 5 results exist */}
@@ -764,15 +764,7 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "Medium", onRowChang
                   </div>
                 ))
               )}
-              {/* Show more button */}
-              {betHistory.length > visibleHistoryCount && (
-                <button
-                  onClick={() => setVisibleHistoryCount((c) => Math.min(c + 5, betHistory.length))}
-                  className="w-16 h-8 text-xs bg-[#2A0025] border border-[#333947] rounded-lg text-white hover:bg-[#3A0035]"
-                >
-                  Show more
-                </button>
-              )}
+              {/* Show more removed - always cap to last 5 */}
             </div>
           </div>
 
