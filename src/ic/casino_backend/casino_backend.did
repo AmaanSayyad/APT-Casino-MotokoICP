@@ -1,0 +1,7 @@
+service : {
+  get_balance_of: (principal) -> (nat) query;
+  deposit: (nat) -> ();
+  withdraw_all: () -> (nat);
+}
+
+

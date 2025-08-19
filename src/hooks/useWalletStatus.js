@@ -7,20 +7,20 @@ import React, {
   useEffect,
   useCallback,
 } from 'react';
-import { useWallet } from '@aptos-labs/wallet-adapter-react';
+import usePlugWallet from '@/hooks/usePlugWallet';
 
 const WalletStatusContext = createContext(null);
 
 export function WalletStatusProvider({ children }) {
   const isDev = process.env.NODE_ENV === 'development';
 
-  const { 
-    connected, 
-    account, 
-    network, 
-    connect, 
-    disconnect
-  } = useWallet();
+  const {
+    connected,
+    principalId,
+    connect,
+    disconnect,
+    available,
+  } = usePlugWallet();
 
   const [devWallet, setDevWallet] = useState({
     isConnected: false,
@@ -75,8 +75,8 @@ export function WalletStatusProvider({ children }) {
       localStorage.setItem('dev-wallet-state', 'connected');
       setDevWallet({
         isConnected: true,
-        address: '0x1234...dev',
-        chain: { id: 'aptos_testnet', name: 'Aptos Testnet' },
+        address: 'aaaa-bbbb-cccc-dev',
+        chain: { id: 'ic_testnet', name: 'IC Local/Testnet' },
       });
       return;
     }
@@ -84,7 +84,7 @@ export function WalletStatusProvider({ children }) {
     try {
       await connect();
     } catch (err) {
-      setError('Failed to connect to Aptos wallet: ' + err.message);
+      setError('Failed to connect to Plug: ' + err.message);
     }
   }, [connect, isDev]);
 
@@ -102,7 +102,7 @@ export function WalletStatusProvider({ children }) {
     try {
       await disconnect();
     } catch (err) {
-      setError('Failed to disconnect wallet: ' + err.message);
+      setError('Failed to disconnect Plug: ' + err.message);
     }
   }, [disconnect, isDev]);
 
@@ -114,15 +114,16 @@ export function WalletStatusProvider({ children }) {
     ? devWallet
     : {
         isConnected: connected,
-        address: account?.address,
-        chain: { 
-          id: 'aptos_testnet', 
-          name: 'Aptos Testnet' 
+        address: principalId,
+        chain: {
+          id: 'ic_testnet',
+          name: 'IC Local/Testnet',
         },
+        available,
       };
 
   useEffect(() => {
-    console.log('🔌 Aptos Wallet connection changed:');
+    console.log('🔌 Plug Wallet connection changed:');
     console.log('Connected:', currentStatus.isConnected);
     console.log('Address:', currentStatus.address);
     console.log('Chain:', currentStatus.chain);
