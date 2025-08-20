@@ -10,6 +10,7 @@ import Iter "mo:base/Iter";
 import Time "mo:base/Time";
 import Nat64 "mo:base/Nat64";
 import Int "mo:base/Int";
+import Text "mo:base/Text";
 
 actor {
   // Balance map in cycles (demo only)
@@ -71,6 +72,16 @@ actor {
     memo : ?Blob;
     created_at_time : ?Nat64;
   };
+  // Standard ICRC-1 transfer error type
+  type TransferError = {
+    #BadFee : { expected_fee : Nat };
+    #InsufficientFunds : { balance : Nat };
+    #TooOld : {};
+    #CreatedInFuture : { ledger_time : Nat64 };
+    #TemporarilyUnavailable : {};
+    #Duplicate : { duplicate_of : Nat };
+    #GenericError : { error_code : Nat; message : Text };
+  };
   type Icrc2TransferFromArgs = {
     from : Account;
     to : Account;
@@ -80,9 +91,20 @@ actor {
     created_at_time : ?Nat64;
     spender_subaccount : ?Blob;
   };
+  // ICRC-2 transfer_from error type (superset; matches commonly used ledgers)
+  type TransferFromError = {
+    #BadFee : { expected_fee : Nat };
+    #InsufficientFunds : { balance : Nat };
+    #InsufficientAllowance : { allowance : Nat };
+    #TooOld : {};
+    #CreatedInFuture : { ledger_time : Nat64 };
+    #TemporarilyUnavailable : {};
+    #Duplicate : { duplicate_of : Nat };
+    #GenericError : { error_code : Nat; message : Text };
+  };
   type TokenActor = actor {
-    icrc1_transfer : (Icrc1TransferArgs) -> async { block_index : ?Nat };
-    icrc2_transfer_from : (Icrc2TransferFromArgs) -> async { block_index : ?Nat };
+    icrc1_transfer : (Icrc1TransferArgs) -> async { #Ok : Nat; #Err : TransferError };
+    icrc2_transfer_from : (Icrc2TransferFromArgs) -> async { #Ok : Nat; #Err : TransferFromError };
     mint_to : (Principal, Nat) -> async ()
   };
 
@@ -271,6 +293,29 @@ actor {
     switch (mines.get(index)) {
       case (null) true;
       case (?_) false;
+    };
+  };
+
+  // ----- APTC Token Distribution -----
+
+  // Send APTC tokens to a user's token address from the canister's treasury
+  public shared ({ caller }) func send_aptc_to_user(userPrincipal : Principal, amount : Nat) : async () {
+    let token = getTokenActorOrTrap();
+
+    // Perform ICRC-1 transfer from canister account to the provided principal
+    let res = await token.icrc1_transfer({
+      from_subaccount = null;
+      to = { owner = userPrincipal; subaccount = null };
+      amount = amount;
+      fee = null;
+      memo = null;
+      created_at_time = null;
+    });
+
+    // Handle standard ICRC-1 result type: variant { Ok : Nat; Err : TransferError }
+    switch (res) {
+      case (#Ok _) { () };
+      case (#Err _) { assert false };
     };
   };
 }

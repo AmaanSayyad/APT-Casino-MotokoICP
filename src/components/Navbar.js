@@ -48,6 +48,7 @@ export default function Navbar() {
   const notification = useNotification();
   const isDev = process.env.NODE_ENV === 'development';
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [showGetTokenModal, setShowGetTokenModal] = useState(false);
   const dispatch = useDispatch();
   const { userBalance, isLoading: isLoadingBalance } = useSelector((state) => state.balance);
   const [walletNetworkName, setWalletNetworkName] = useState("");
@@ -58,6 +59,8 @@ export default function Navbar() {
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [depositAmount, setDepositAmount] = useState("");
   const [isDepositing, setIsDepositing] = useState(false);
+  const [aptcTokenAddress, setAptcTokenAddress] = useState("");
+  const [isGettingToken, setIsGettingToken] = useState(false);
 
   // Wallet connection (ICP)
   const [isConnected, setIsConnected] = useState(false);
@@ -262,6 +265,47 @@ export default function Navbar() {
       notification.error(`Deposit failed: ${msg}`);
     } finally {
       setIsDepositing(false);
+    }
+  };
+
+  // Handle APTC token sending
+  const handleGetAPTC = async () => {
+    if (!isConnected) {
+      notification.error('Please connect your wallet first');
+      return;
+    }
+
+    if (!aptcTokenAddress.trim()) {
+      notification.error('Please enter your APTC token address');
+      return;
+    }
+
+    // Validate APTC token address format (should be a valid principal)
+    try {
+      Principal.fromText(aptcTokenAddress.trim());
+    } catch (error) {
+      notification.error('Invalid APTC token address format');
+      return;
+    }
+
+    setIsGettingToken(true);
+    try {
+      const actor = await getCasinoActor(walletIdentity);
+      
+      // Send 5 APTC to the user's APTC token address
+      const amountNat = BigInt(5 * 100000000); // 5 APTC in nano units
+      await actor.send_aptc_to_user(Principal.fromText(aptcTokenAddress.trim()), amountNat);
+      
+      notification.success('Successfully sent 5 APTC to your token address!');
+      setAptcTokenAddress("");
+      setShowGetTokenModal(false);
+      
+    } catch (error) {
+      console.error('APTC sending error:', error);
+      const msg = (error && (error.message || (typeof error === 'string' ? error : 'Unknown error'))) || 'Unknown error';
+      notification.error(`Failed to send APTC: ${msg}`);
+    } finally {
+      setIsGettingToken(false);
     }
   };
 
@@ -667,6 +711,16 @@ export default function Navbar() {
               setWalletIdentity(identity);
             }}
           />
+
+          {/* Get 5 APTC Token Button */}
+          {isConnected && (
+            <button
+              onClick={() => setShowGetTokenModal(true)}
+              className="px-4 py-2 bg-gradient-to-r from-yellow-600 to-orange-600 text-white font-medium rounded-lg hover:from-yellow-700 hover:to-orange-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+            >
+              Get 5 APTC Token
+            </button>
+          )}
   
         </div>
       </div>
@@ -887,6 +941,104 @@ export default function Navbar() {
               >
                 Refresh Balance
               </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Get APTC Token Modal (portal) */}
+      {isClient && showGetTokenModal && createPortal(
+        <div
+          className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          onClick={() => setShowGetTokenModal(false)}
+        >
+          <div
+            className="bg-[#0A0008] border border-purple-500/20 rounded-lg p-6 w-full max-w-md mx-4 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-white">Get 5 APTC Token</h3>
+              <button
+                onClick={() => setShowGetTokenModal(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            {/* NNS Token Import Info */}
+            <div className="mb-4 p-3 bg-gradient-to-r from-blue-900/20 to-blue-800/10 rounded-lg border border-blue-800/30">
+              <div className="flex items-center gap-2 mb-2">
+                <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-sm font-medium text-blue-300">APTC Token Information</span>
+              </div>
+              <p className="text-xs text-blue-200 mb-2">
+                Token Address: <code className="bg-blue-900/50 px-2 py-1 rounded text-blue-100">5nevn-xqaaa-aaaab-aaeja-cai</code>
+              </p>
+              <a
+                href="https://nns.ic0.app/tokens/?import-ledger-id=5nevn-xqaaa-aaaab-aaeja-cai"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-xs text-blue-300 hover:text-blue-200 underline"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+                Add APTC Token to NNS
+              </a>
+            </div>
+            
+                              {/* APTC Token Address Input */}
+                  <div className="mb-6">
+                    <h4 className="text-sm font-medium text-white mb-2">Your APTC Token Address</h4>
+                    <input
+                      type="text"
+                      value={aptcTokenAddress}
+                      onChange={(e) => setAptcTokenAddress(e.target.value)}
+                      placeholder="Enter your APTC token address (e.g., gudif-djfon-cwqgb-csjoe-fmkc2-kqfgp-usywp-beq4d-e3a6c-vpum7-zae)"
+                      className="w-full px-3 py-2 bg-gray-800/50 border border-gray-600/50 rounded text-white placeholder-gray-400 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/25"
+                      disabled={isGettingToken}
+                    />
+                    <p className="text-xs text-gray-400 mt-1">
+                      Enter the APTC token address where you want to receive 5 APTC tokens
+                    </p>
+                  </div>
+
+            {/* Get APTC Button */}
+            <div className="mb-4">
+              <button
+                onClick={handleGetAPTC}
+                disabled={!isConnected || !aptcTokenAddress.trim() || isGettingToken}
+                className="w-full px-4 py-2 bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white rounded font-medium transition-colors flex items-center justify-center gap-2"
+              >
+                {isGettingToken ? (
+                  <>
+                    <div className="animate-spin w-4 h-4 border-2 border-white/20 border-t-white rounded-full"></div>
+                    Sending APTC...
+                  </>
+                ) : (
+                  <>
+                    Get 5 APTC Tokens
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Instructions */}
+            <div className="text-xs text-gray-400 space-y-1">
+              <p>1. First add APTC token to your NNS wallet using the link above</p>
+              <p>2. Enter your APTC token address in the input field</p>
+              <p>3. Click "Get 5 APTC Tokens" to receive tokens from the casino</p>
             </div>
           </div>
         </div>,
