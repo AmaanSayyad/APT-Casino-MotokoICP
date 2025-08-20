@@ -89,7 +89,7 @@ const NotificationsContainer = ({ notifications, onClose }) => {
   
   // Using portal to render notifications at the root level, avoiding z-index issues
   return createPortal(
-    <div className="fixed top-[120px] right-4 z-[9999] w-full max-w-sm pointer-events-none">
+    <div className="fixed top-[120px] right-4 z-[12000] w-full max-w-sm pointer-events-none">
       <style jsx global>{`
         @keyframes slideIn {
           0% { opacity: 0; transform: translateX(100%); }
