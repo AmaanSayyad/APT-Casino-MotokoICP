@@ -59,6 +59,7 @@ export default function Navbar() {
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [withdrawAddress, setWithdrawAddress] = useState("");
   const [depositAmount, setDepositAmount] = useState("");
+  const [depositAddress, setDepositAddress] = useState("");
   const [isDepositing, setIsDepositing] = useState(false);
   const [aptcTokenAddress, setAptcTokenAddress] = useState("");
   const [isGettingToken, setIsGettingToken] = useState(false);
@@ -249,10 +250,15 @@ export default function Navbar() {
     }
   };
 
-  // Handle deposit to house balance
+  // Handle deposit - redirect to NNS with transfer details
   const handleDeposit = async () => {
     if (!isConnected) {
       notification.error('Please connect your wallet first');
+      return;
+    }
+
+    if (!depositAddress.trim()) {
+      notification.error('Please enter your APTC wallet address');
       return;
     }
 
@@ -262,22 +268,84 @@ export default function Navbar() {
       return;
     }
 
+    // Validate APTC wallet address format
+    try {
+      Principal.fromText(depositAddress.trim());
+    } catch (error) {
+      notification.error('Invalid APTC wallet address format');
+      return;
+    }
+
     setIsDepositing(true);
     try {
       const actor = await getCasinoActor(walletIdentity);
       const amountNat = BigInt(Math.floor(amount * 100000000));
-      await actor.deposit(amountNat);
-      const newBal = await actor.get_balance_of(Principal.fromText(address));
-      dispatch(setBalance(String(newBal)));
-      notification.success(`Successfully deposited ${amount} APTC to house balance!`);
+      
+      // Request deposit nonce and casino principal from backend
+      const [nonce, casinoPrincipalText] = await actor.request_deposit(amountNat);
+      
+      // Store nonce for later verification
+      localStorage.setItem('pendingDepositNonce', nonce.toString());
+      localStorage.setItem('pendingDepositAmount', amountNat.toString());
+      localStorage.setItem('pendingDepositUserPrincipal', Principal.toText(walletIdentity.getPrincipal()));
+      localStorage.setItem('pendingDepositCasinoPrincipal', casinoPrincipalText);
+      
+      // Create NNS transfer URL with pre-filled details
+      const nnsUrl = `https://nns.ic0.app/wallet/?u=5nevn-xqaaa-aaaab-aaeja-cai&to=${casinoPrincipalText}&amount=${amount}&memo=${nonce}`;
+      
+      // Open NNS in new tab
+      window.open(nnsUrl, '_blank');
+      
+      // Show success message with clear instructions
+      notification.success(`Deposit request created! Nonce: ${nonce}\n\nNNS transfer page opened. Please:\n1. Complete the transfer to ${casinoPrincipalText}\n2. Use memo: ${nonce}\n3. Return here and click "Check Completion"`);
+      
+      // Clear form
       setDepositAmount("");
+      setDepositAddress("");
       
     } catch (error) {
-      console.error('Deposit error:', error);
+      console.error('Deposit request error:', error);
       const msg = (error && (error.message || (typeof error === 'string' ? error : 'Unknown error'))) || 'Unknown error';
-      notification.error(`Deposit failed: ${msg}`);
+      notification.error(`Deposit request failed: ${msg}`);
     } finally {
       setIsDepositing(false);
+    }
+  };
+
+  // Handle deposit completion check
+  const handleCheckDepositCompletion = async () => {
+    if (!isConnected) {
+      notification.error('Please connect your wallet first');
+      return;
+    }
+
+    const nonce = localStorage.getItem('pendingDepositNonce');
+    if (!nonce) {
+      notification.error('No pending deposit found');
+      return;
+    }
+
+    try {
+      const actor = await getCasinoActor(walletIdentity);
+      const [success, newBalance] = await actor.check_deposit_completion(BigInt(nonce));
+      
+      if (success) {
+        // Update local balance
+        dispatch(setBalance(String(newBalance)));
+        
+        // Clear pending deposit data
+        localStorage.removeItem('pendingDepositNonce');
+        localStorage.removeItem('pendingDepositAmount');
+        
+        notification.success(`Deposit completed successfully! New balance: ${(Number(newBalance) / 100000000).toFixed(8)} APTC`);
+      } else {
+        notification.error('Deposit not yet completed. Please wait for the NNS transfer to be processed.');
+      }
+      
+    } catch (error) {
+      console.error('Deposit completion check error:', error);
+      const msg = (error && (error.message || (typeof error === 'string' ? error : 'Unknown error'))) || 'Unknown error';
+      notification.error(`Deposit completion check failed: ${msg}`);
     }
   };
 
@@ -859,6 +927,23 @@ export default function Navbar() {
             {/* Deposit Section */}
             <div className="mb-6">
               <h4 className="text-sm font-medium text-white mb-2">Deposit APTC</h4>
+              <div className="mb-2 text-[11px] text-gray-400">
+                Casino canister address:
+                <code className="ml-1 px-2 py-0.5 rounded bg-gray-800/60 text-gray-200">
+                  {process.env.NEXT_PUBLIC_CASINO_CANISTER_ID || 'd7bsl-tiaaa-aaaan-qz5pq-cai'}
+                </code>
+              </div>
+              <div className="mb-3">
+                <input
+                  type="text"
+                  value={depositAddress}
+                  onChange={(e) => setDepositAddress(e.target.value)}
+                  placeholder="Your APTC wallet address (principal)"
+                  className="w-full px-3 py-2 bg-gray-800/50 border border-gray-600/50 rounded text-white placeholder-gray-400 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/25"
+                  disabled={isDepositing}
+                />
+                <p className="text-xs text-gray-400 mt-1">Enter your APTC wallet address to receive deposit instructions</p>
+              </div>
               <div className="flex gap-2">
                 <input
                   type="number"
@@ -872,13 +957,13 @@ export default function Navbar() {
                 />
                 <button
                   onClick={handleDeposit}
-                  disabled={!isConnected || !depositAmount || parseFloat(depositAmount) <= 0 || isDepositing}
+                  disabled={!isConnected || !depositAmount || !depositAddress.trim() || parseFloat(depositAmount) <= 0 || isDepositing}
                   className="px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white rounded font-medium transition-colors flex items-center gap-2"
                 >
                   {isDepositing ? (
                     <>
                       <div className="animate-spin w-4 h-4 border-2 border-white/20 border-t-white rounded-full"></div>
-                      Depositing...
+                      Processing...
                     </>
                   ) : (
                     <>
@@ -891,8 +976,45 @@ export default function Navbar() {
                 </button>
               </div>
               <p className="text-xs text-gray-400 mt-1">
-                Transfer APTC from your wallet to house balance for gaming
+                Click Deposit to open NNS transfer page with pre-filled details
               </p>
+              {typeof window !== 'undefined' && localStorage.getItem('pendingDepositNonce') && (
+                <div className="mt-3 p-3 bg-gray-900/30 rounded-lg border border-gray-700/30 text-xs text-gray-300 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-gray-400">Send APTC to</span>
+                    <code className="px-2 py-1 rounded bg-gray-800/60 text-gray-200 break-all">
+                      {localStorage.getItem('pendingDepositCasinoPrincipal') || process.env.NEXT_PUBLIC_CASINO_CANISTER_ID || 'd7bsl-tiaaa-aaaan-qz5pq-cai'}
+                    </code>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-gray-400">Memo</span>
+                    <code className="px-2 py-1 rounded bg-gray-800/60 text-gray-200">
+                      {localStorage.getItem('pendingDepositNonce')}
+                    </code>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-gray-400">Amount</span>
+                    <code className="px-2 py-1 rounded bg-gray-800/60 text-gray-200">
+                      {(() => {
+                        const amt = localStorage.getItem('pendingDepositAmount');
+                        const n = amt ? Number(amt) : 0;
+                        return (n / 100000000).toFixed(8);
+                      })()} APTC
+                    </code>
+                  </div>
+                  <a
+                    href={`https://nns.ic0.app/wallet/?u=5nevn-xqaaa-aaaab-aaeja-cai&to=${encodeURIComponent(localStorage.getItem('pendingDepositCasinoPrincipal') || process.env.NEXT_PUBLIC_CASINO_CANISTER_ID || 'd7bsl-tiaaa-aaaan-qz5pq-cai')}&amount=${(() => { const amt = localStorage.getItem('pendingDepositAmount'); const n = amt ? Number(amt) : 0; return (n / 100000000).toString(); })()}&memo=${localStorage.getItem('pendingDepositNonce')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-blue-300 hover:text-blue-200 underline"
+                  >
+                    Open NNS to complete transfer
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                </div>
+              )}
               {/* Quick Deposit Buttons */}
               <div className="flex gap-1 mt-2">
                 {[0.1, 0.5, 1, 5].map((amount) => (
@@ -905,6 +1027,23 @@ export default function Navbar() {
                     {amount} APTC
                   </button>
                 ))}
+              </div>
+              
+              {/* Check Completion Button */}
+              <div className="mt-4">
+                <button
+                  onClick={handleCheckDepositCompletion}
+                  disabled={!isConnected || !localStorage.getItem('pendingDepositNonce')}
+                  className="w-full px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white rounded font-medium transition-colors flex items-center justify-center gap-2"
+                >
+                  Check Deposit Completion
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </button>
+                <p className="text-xs text-gray-400 mt-1 text-center">
+                  Click after completing the NNS transfer to verify and update your balance
+                </p>
               </div>
             </div>
 

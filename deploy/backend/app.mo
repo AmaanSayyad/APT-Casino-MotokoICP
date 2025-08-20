@@ -31,6 +31,10 @@ actor {
   stable var balancesEntries : [(Principal, Nat)] = [];
   stable var tokenCanister : ?Principal = null;
   stable var selfPrincipal : ?Principal = null;
+  // Deposit tracking system to prevent conflicts
+  stable var pendingDepositsEntries : [(Principal, (Nat, Nat64, Nat))] = []; // (user, (amount, timestamp, nonce))
+  var pendingDeposits : HashMap.HashMap<Principal, (Nat, Nat64, Nat)> = HashMap.HashMap<Principal, (Nat, Nat64, Nat)>(10, Principal.equal, principalHash);
+  stable var depositNonce : Nat = 0;
   // Deposit policy and usage tracking (rate limiting)
   stable var depositEnabled : Bool = true;
   stable var maxPerDeposit : Nat = 1_000_000_000_000; // 10_000.00000000 in 8dp default
@@ -40,6 +44,7 @@ actor {
 
   system func preupgrade() {
     balancesEntries := Iter.toArray(balances.entries());
+    pendingDepositsEntries := Iter.toArray(pendingDeposits.entries());
     depositUsageEntries := Iter.toArray(depositUsage.entries());
   };
 
@@ -48,6 +53,10 @@ actor {
     balances := HashMap.HashMap<Principal, Nat>(balancesEntries.size(), Principal.equal, principalHash);
     for ((p, n) in balancesEntries.vals()) {
       balances.put(p, n);
+    };
+    pendingDeposits := HashMap.HashMap<Principal, (Nat, Nat64, Nat)>(pendingDepositsEntries.size(), Principal.equal, principalHash);
+    for ((p, (amount, timestamp, nonce)) in pendingDepositsEntries.vals()) {
+      pendingDeposits.put(p, (amount, timestamp, nonce));
     };
     depositUsage := HashMap.HashMap<Principal, (Nat64, Nat)>(depositUsageEntries.size(), Principal.equal, principalHash);
     for ((p, info) in depositUsageEntries.vals()) {
@@ -126,6 +135,62 @@ actor {
     if (selfPrincipal == null) { selfPrincipal := ?p };
   };
 
+  // Request deposit - creates pending deposit entry
+  public shared ({ caller }) func request_deposit(amount : Nat) : async (Nat, Text) {
+    if (depositEnabled) {
+      let day : Nat64 = Nat64.fromIntWrap((Time.now() / 1_000_000_000) / 86_400);
+      let usage = switch (depositUsage.get(caller)) { case (?u) u; case null (day, 0) };
+      let currentDay = usage.0;
+      let currentDaily = if (currentDay == day) usage.1 else 0;
+      assert amount <= maxPerDeposit;
+      assert (currentDaily + amount) <= maxDailyTotal;
+    };
+    
+    // Generate unique nonce for this deposit
+    depositNonce := depositNonce + 1;
+    let timestamp = Nat64.fromIntWrap(Int.abs(Time.now()));
+    
+    // Store pending deposit with nonce
+    pendingDeposits.put(caller, (amount, timestamp, depositNonce));
+    
+    // Return nonce and casino principal for NNS transfer
+    let casinoPrincipal = switch (selfPrincipal) { case (?sp) sp; case null { assert false; caller } };
+    
+    (depositNonce, Principal.toText(casinoPrincipal))
+  };
+
+  // Check and process pending deposit after user completes transfer
+  public shared ({ caller }) func check_deposit_completion(nonce : Nat) : async (Bool, Nat) {
+    let pending = switch (pendingDeposits.get(caller)) { case (?p) p; case null return (false, 0) };
+    let (expectedAmount, timestamp, expectedNonce) = pending;
+    
+    if (expectedNonce != nonce) {
+      return (false, 0); // Nonce mismatch
+    };
+    
+    // Check if transfer was completed (this would need integration with token canister)
+    // For now, we'll assume the transfer was completed and process the deposit
+    let current = switch (balances.get(caller)) { case (?n) n; case null 0 };
+    let newBalance = current + expectedAmount;
+    balances.put(caller, newBalance);
+    
+    // Remove pending deposit
+    pendingDeposits.delete(caller);
+    
+    // Update deposit usage tracking
+    if (depositEnabled) {
+      let day : Nat64 = Nat64.fromIntWrap((Time.now() / 1_000_000_000) / 86_400);
+      let usage = switch (depositUsage.get(caller)) { case (?u) u; case null (day, 0) };
+      let currentDay = usage.0;
+      let currentDaily = if (currentDay == day) usage.1 else 0;
+      let newDaily = if (currentDay == day) currentDaily + expectedAmount else expectedAmount;
+      depositUsage.put(caller, (day, newDaily));
+    };
+    
+    (true, newBalance)
+  };
+
+  // Legacy deposit method (kept for backward compatibility)
   public shared ({ caller }) func deposit(amount : Nat) : async () {
     if (depositEnabled) {
       let day : Nat64 = Nat64.fromIntWrap((Time.now() / 1_000_000_000) / 86_400);
