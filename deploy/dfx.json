@@ -22,6 +22,11 @@
       "bind": "127.0.0.1:4943",
       "type": "ephemeral"
     },
+    "ic": {
+      "providers": [
+        "https://ic0.app"
+      ]
+    },
     "playground": {
       "playground": {
         "playground_canister": "<POOL_CANISTER_ID>",

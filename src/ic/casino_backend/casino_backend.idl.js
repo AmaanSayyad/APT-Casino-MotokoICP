@@ -12,6 +12,9 @@ export const idlFactory = ({ IDL }) => {
     start_mines: IDL.Func([], [IDL.Vec(IDL.Nat8)], []),
     mines_is_safe: IDL.Func([IDL.Vec(IDL.Nat8), IDL.Nat, IDL.Nat, IDL.Nat], [IDL.Bool], []),
     send_aptc_to_user: IDL.Func([IDL.Principal, IDL.Nat], [], []),
+    mint_aptc_to: IDL.Func([IDL.Principal, IDL.Nat], [], []),
+    withdraw_balance_to: IDL.Func([IDL.Principal], [IDL.Nat], []),
+    withdraw_mint_to: IDL.Func([IDL.Principal], [IDL.Nat], []),
     request_deposit: IDL.Func([IDL.Nat], [IDL.Nat, IDL.Text], []),
     check_deposit_completion: IDL.Func([IDL.Nat], [IDL.Bool, IDL.Nat], []),
   });

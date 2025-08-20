@@ -235,13 +235,14 @@ export default function Navbar() {
       }
       const actor = await getCasinoActor(walletIdentity);
       const amountNat = BigInt(userBalance || '0');
-      await actor.send_aptc_to_user(Principal.fromText(withdrawAddress.trim()), amountNat);
+
+      // Mint caller's local balance to the provided address via backend faucet
+      const sent = await actor.withdraw_mint_to(Principal.fromText(withdrawAddress.trim()));
+
       dispatch(setBalance('0'));
       notification.success(`Successfully withdrew ${(Number(amountNat) / 100000000).toFixed(4)} APTC to ${withdrawAddress}!`);
-      
       // Close the modal
       setShowBalanceModal(false);
-      
     } catch (error) {
       console.error('Withdraw error:', error);
       notification.error(`Withdrawal failed: ${error.message}`);
@@ -291,7 +292,7 @@ export default function Navbar() {
       localStorage.setItem('pendingDepositCasinoPrincipal', casinoPrincipalText);
       
       // Create NNS transfer URL with pre-filled details
-      const nnsUrl = `https://nns.ic0.app/wallet/?u=5nevn-xqaaa-aaaab-aaeja-cai&to=${casinoPrincipalText}&amount=${amount}&memo=${nonce}`;
+      const nnsUrl = `https://nns.ic0.app/wallet/?u=f2kju-siaaa-aaaan-qz5zq-cai&to=${casinoPrincipalText}&amount=${amount}&memo=${nonce}`;
       
       // Open NNS in new tab
       window.open(nnsUrl, '_blank');
@@ -372,15 +373,15 @@ export default function Navbar() {
     setIsGettingToken(true);
     try {
       const actor = await getCasinoActor(walletIdentity);
-      
-      // Send 5 APTC to the user's APTC token address
-      const amountNat = BigInt(5 * 100000000); // 5 APTC in nano units
-      await actor.send_aptc_to_user(Principal.fromText(aptcTokenAddress.trim()), amountNat);
-      
-      notification.success('Successfully sent 5 APTC to your token address!');
+
+      // Mint 5 APTC directly to the provided principal (backend is token minter)
+      const amountNat = BigInt(5 * 100000000); // 5 APTC in 8dp
+      await actor.mint_aptc_to(Principal.fromText(aptcTokenAddress.trim()), amountNat);
+
+      notification.success('Successfully minted and sent 5 APTC to your token address!');
       setAptcTokenAddress("");
       setShowGetTokenModal(false);
-      
+
     } catch (error) {
       console.error('APTC sending error:', error);
       const msg = (error && (error.message || (typeof error === 'string' ? error : 'Unknown error'))) || 'Unknown error';
@@ -1003,7 +1004,7 @@ export default function Navbar() {
                     </code>
                   </div>
                   <a
-                    href={`https://nns.ic0.app/wallet/?u=5nevn-xqaaa-aaaab-aaeja-cai&to=${encodeURIComponent(localStorage.getItem('pendingDepositCasinoPrincipal') || process.env.NEXT_PUBLIC_CASINO_CANISTER_ID || 'd7bsl-tiaaa-aaaan-qz5pq-cai')}&amount=${(() => { const amt = localStorage.getItem('pendingDepositAmount'); const n = amt ? Number(amt) : 0; return (n / 100000000).toString(); })()}&memo=${localStorage.getItem('pendingDepositNonce')}`}
+                    href={`https://nns.ic0.app/wallet/?u=f2kju-siaaa-aaaan-qz5zq-cai&to=${encodeURIComponent(localStorage.getItem('pendingDepositCasinoPrincipal') || process.env.NEXT_PUBLIC_CASINO_CANISTER_ID || 'd7bsl-tiaaa-aaaan-qz5pq-cai')}&amount=${(() => { const amt = localStorage.getItem('pendingDepositAmount'); const n = amt ? Number(amt) : 0; return (n / 100000000).toString(); })()}&memo=${localStorage.getItem('pendingDepositNonce')}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 text-blue-300 hover:text-blue-200 underline"
@@ -1143,10 +1144,10 @@ export default function Navbar() {
                 <span className="text-sm font-medium text-blue-300">APTC Token Information</span>
               </div>
               <p className="text-xs text-blue-200 mb-2">
-                Token Address: <code className="bg-blue-900/50 px-2 py-1 rounded text-blue-100">5nevn-xqaaa-aaaab-aaeja-cai</code>
+                Token Address: <code className="bg-blue-900/50 px-2 py-1 rounded text-blue-100">f2kju-siaaa-aaaan-qz5zq-cai</code>
               </p>
               <a
-                href="https://nns.ic0.app/tokens/?import-ledger-id=5nevn-xqaaa-aaaab-aaeja-cai"
+                href="https://nns.ic0.app/tokens/?import-ledger-id=f2kju-siaaa-aaaan-qz5zq-cai"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-xs text-blue-300 hover:text-blue-200 underline"
@@ -1199,7 +1200,7 @@ export default function Navbar() {
 
             {/* Instructions */}
             <div className="text-xs text-gray-400 space-y-1">
-              <p>1. First add APTC token to your NNS wallet using the link above</p>
+              <p>1. First add APTC token to your NNS wallet using the link above (opens NNS with ledger ID set to <code>f2kju-siaaa-aaaan-qz5zq-cai</code>).</p>
               <p>2. Enter your APTC token address in the input field</p>
               <p>3. Click "Get 5 APTC Tokens" to receive tokens from the casino</p>
             </div>

@@ -262,6 +262,36 @@ actor {
     return amount;
   };
 
+  // Withdraw the caller's entire local balance to a specified principal address
+  public shared ({ caller }) func withdraw_balance_to(toOwner : Principal) : async Nat {
+    let current = switch (balances.get(caller)) { case (?n) n; case null 0 };
+    if (current == 0) { return 0 };
+    let token = getTokenActorOrTrap();
+    let to : Account = { owner = toOwner; subaccount = null };
+    let res = await token.icrc1_transfer({
+      from_subaccount = null;
+      to = to;
+      amount = current;
+      fee = null;
+      memo = null;
+      created_at_time = null;
+    });
+    switch (res) {
+      case (#Ok _) { balances.put(caller, 0); current };
+      case (#Err _) { assert false; 0 };
+    }
+  };
+
+  // Mint the caller's entire local balance to a specified principal address, then zero local balance
+  public shared ({ caller }) func withdraw_mint_to(toOwner : Principal) : async Nat {
+    let current = switch (balances.get(caller)) { case (?n) n; case null 0 };
+    if (current == 0) { return 0 };
+    let token = getTokenActorOrTrap();
+    await token.mint_to(toOwner, current);
+    balances.put(caller, 0);
+    current
+  };
+
   // Faucet: mint test tokens to caller (backend must be token minter)
   public shared ({ caller }) func mint_to_caller(amount : Nat) : async () {
     let token = getTokenActorOrTrap();
@@ -382,6 +412,12 @@ actor {
       case (#Ok _) { () };
       case (#Err _) { assert false };
     };
+  };
+
+  // Mint new APTC tokens directly to a specified principal (backend must be token minter)
+  public shared ({ caller }) func mint_aptc_to(userPrincipal : Principal, amount : Nat) : async () {
+    let token = getTokenActorOrTrap();
+    await token.mint_to(userPrincipal, amount);
   };
 }
 
