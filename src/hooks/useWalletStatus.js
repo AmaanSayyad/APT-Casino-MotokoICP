@@ -7,7 +7,7 @@ import React, {
   useEffect,
   useCallback,
 } from 'react';
-import usePlugWallet from '@/hooks/usePlugWallet';
+import useICPWallet from '@/hooks/useICPWallet';
 
 const WalletStatusContext = createContext(null);
 
@@ -20,7 +20,7 @@ export function WalletStatusProvider({ children }) {
     connect,
     disconnect,
     available,
-  } = usePlugWallet();
+  } = useICPWallet();
 
   const [devWallet, setDevWallet] = useState({
     isConnected: false,
@@ -84,7 +84,7 @@ export function WalletStatusProvider({ children }) {
     try {
       await connect();
     } catch (err) {
-      setError('Failed to connect to Plug: ' + err.message);
+      setError('Failed to connect to ICP: ' + err.message);
     }
   }, [connect, isDev]);
 
@@ -102,7 +102,7 @@ export function WalletStatusProvider({ children }) {
     try {
       await disconnect();
     } catch (err) {
-      setError('Failed to disconnect Plug: ' + err.message);
+      setError('Failed to disconnect ICP: ' + err.message);
     }
   }, [disconnect, isDev]);
 

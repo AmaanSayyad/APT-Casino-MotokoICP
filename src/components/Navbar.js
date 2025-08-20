@@ -5,10 +5,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
-import usePlugWallet from '@/hooks/usePlugWallet';
 import { useSelector, useDispatch } from 'react-redux';
 import { setBalance, setLoading, loadBalanceFromStorage } from '@/store/balanceSlice';
-import PlugConnectWalletButton from "./PlugConnectWalletButton";
+import ICPConnectWalletButton from "./ICPConnectWalletButton";
 
 
 import { useNotification } from './NotificationSystem';
@@ -60,8 +59,10 @@ export default function Navbar() {
   const [depositAmount, setDepositAmount] = useState("");
   const [isDepositing, setIsDepositing] = useState(false);
 
-  // Wallet connection (Plug)
-  const { connected: isConnected, principalId } = usePlugWallet();
+  // Wallet connection (ICP)
+  const [isConnected, setIsConnected] = useState(false);
+  const [principalId, setPrincipalId] = useState(null);
+  const [walletIdentity, setWalletIdentity] = useState(null);
   const address = principalId;
   const isWalletReady = isConnected && !!address;
 
@@ -103,14 +104,14 @@ export default function Navbar() {
     if (isConnected && address) {
       loadUserBalance();
     }
-    const onPlugConnected = () => {
+    const onICPConnected = () => {
       if (isConnected && address) loadUserBalance();
     };
-    window.addEventListener('plug-connected', onPlugConnected);
-    return () => window.removeEventListener('plug-connected', onPlugConnected);
+    window.addEventListener('icp-connected', onICPConnected);
+    return () => window.removeEventListener('icp-connected', onICPConnected);
   }, [isConnected, address]);
 
-  // Plug persistence handled internally; no ICP reconnect
+  // ICP wallet integration
 
   useEffect(() => {
     setIsClient(true);
@@ -144,6 +145,32 @@ export default function Navbar() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isDev, notifications]);
+
+  // Listen for ICP wallet connection events
+  useEffect(() => {
+    const handleICPConnection = (event) => {
+      // This will be triggered when the ICP wallet connects
+      // The actual connection state will be managed by the ICPConnectWalletButton component
+      console.log('ICP wallet connection event received');
+      // The identity will be set by the ICPConnectWalletButton component
+    };
+
+    const handleICPDisconnection = (event) => {
+      // Handle disconnection
+      setIsConnected(false);
+      setPrincipalId(null);
+      setWalletIdentity(null);
+      console.log('ICP wallet disconnected');
+    };
+
+    window.addEventListener('icp-connected', handleICPConnection);
+    window.addEventListener('icp-disconnected', handleICPDisconnection);
+
+    return () => {
+      window.removeEventListener('icp-connected', handleICPConnection);
+      window.removeEventListener('icp-disconnected', handleICPDisconnection);
+    };
+  }, []);
 
   // Close balance modal with ESC
   useEffect(() => {
@@ -190,7 +217,7 @@ export default function Navbar() {
         notification.error('No balance to withdraw');
         return;
       }
-      const actor = await getCasinoActor();
+      const actor = await getCasinoActor(walletIdentity);
       const withdrawn = await actor.withdraw_all();
       dispatch(setBalance('0'));
       notification.success(`Successfully withdrew ${(Number(withdrawn) / 100000000).toFixed(4)} APTC!`);
@@ -221,7 +248,7 @@ export default function Navbar() {
 
     setIsDepositing(true);
     try {
-      const actor = await getCasinoActor();
+      const actor = await getCasinoActor(walletIdentity);
       const amountNat = BigInt(Math.floor(amount * 100000000));
       await actor.deposit(amountNat);
       const newBal = await actor.get_balance_of(Principal.fromText(address));
@@ -632,8 +659,14 @@ export default function Navbar() {
             </div>
           )}
           
-          {/* Plug Wallet Button */}
-          <PlugConnectWalletButton />
+          {/* ICP Wallet Button */}
+          <ICPConnectWalletButton 
+            onConnectionChange={({ connected, principalId, identity }) => {
+              setIsConnected(connected);
+              setPrincipalId(principalId);
+              setWalletIdentity(identity);
+            }}
+          />
   
         </div>
       </div>

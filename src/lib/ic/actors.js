@@ -1,12 +1,11 @@
 import { CASINO_CANISTER_ID, IC_HOST } from '@/config/ic';
-import { ensurePersistentConnection, createActor } from '@/lib/ic/plug';
-import { idlFactory as casinoIdl } from '@/ic/casino_backend/casino_backend.idl';
+import { getCasinoActor as getICPCasinoActor } from '@/lib/ic/icpActors';
 
-export const getCasinoActor = async () => {
+export const getCasinoActor = async (identity) => {
   if (!CASINO_CANISTER_ID) throw new Error('CASINO_CANISTER_ID is not set');
-  // Only check status; do not trigger extra connect prompts
-  await ensurePersistentConnection({ whitelist: [CASINO_CANISTER_ID], host: IC_HOST });
-  return createActor({ canisterId: CASINO_CANISTER_ID, idlFactory: casinoIdl, host: IC_HOST });
+  if (!identity) throw new Error('User must be connected to access casino');
+  
+  return getICPCasinoActor(identity);
 };
 
 

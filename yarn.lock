@@ -246,10 +246,35 @@
     "@babel/helper-string-parser" "^7.27.1"
     "@babel/helper-validator-identifier" "^7.27.1"
 
-"@dfinity/candid@^3.2.1":
+"@dfinity/agent@^3.2.1", "@dfinity/agent@3.2.1":
+  version "3.2.1"
+  resolved "https://registry.npmjs.org/@dfinity/agent/-/agent-3.2.1.tgz"
+  integrity sha512-itPAqee2sal3vn5UJcLEt6TfVgvacDt82x9i8E/EASJQy2q5yPZ4FUvPENAybBs3+jKaEFYV8DRseUGsff6glw==
+  dependencies:
+    "@dfinity/cbor" "^0.2.2"
+    "@noble/curves" "^1.9.2"
+
+"@dfinity/auth-client@^3.2.1":
+  version "3.2.1"
+  resolved "https://registry.npmjs.org/@dfinity/auth-client/-/auth-client-3.2.1.tgz"
+  integrity sha512-/wbQO0nOh7WfOJwCVMvfQQJ5rnXsz85ZQ721y3Z+O5ldluAvTkVvqWsP5w0xjBZqqgvHO467VoB/h7G+/tXa9g==
+  dependencies:
+    idb "^7.0.2"
+
+"@dfinity/candid@^3.2.1", "@dfinity/candid@3.2.1":
   version "3.2.1"
   resolved "https://registry.npmjs.org/@dfinity/candid/-/candid-3.2.1.tgz"
   integrity sha512-fKrkW7TAx2MX+1XPfSE6cQPeFsNs3c4g0JdoL7uw2JONqPT7eOV1o7Oqr/I+4coITvD3hIDZcnD4IxiIjQF+NQ==
+
+"@dfinity/cbor@^0.2.2":
+  version "0.2.2"
+  resolved "https://registry.npmjs.org/@dfinity/cbor/-/cbor-0.2.2.tgz"
+  integrity sha512-GPJpH73kDEKbUBdUjY80lz7cq9l0vm1h/7ppejPV6O0ZTqCLrYspssYvqjRmK4aNnJ/SKXsP0rg9LYX7zpegaA==
+
+"@dfinity/identity@^3.2.1", "@dfinity/identity@3.2.1":
+  version "3.2.1"
+  resolved "https://registry.npmjs.org/@dfinity/identity/-/identity-3.2.1.tgz"
+  integrity sha512-JF0DPoAZS81SgwF4FFb33ExocpuTVyRDwr+gAVASmCcuTULd42irq0yG3A1+k5aW54oaM1iFys7AnpEoid+9Iw==
 
 "@dfinity/principal@^3.2.1", "@dfinity/principal@3.2.1":
   version "3.2.1"
@@ -714,7 +739,7 @@
   resolved "https://registry.npmjs.org/@next/swc-linux-x64-musl/-/swc-linux-x64-musl-15.3.3.tgz"
   integrity sha512-HrUcTr4N+RgiiGn3jjeT6Oo208UT/7BuTr7K0mdKRBtTbT4v9zJqCDKO97DUqqoBK1qyzP1RwvrWTvU6EPh/Cw==
 
-"@noble/curves@^1.6.0", "@noble/curves@~1.9.0":
+"@noble/curves@^1.6.0", "@noble/curves@^1.9.2", "@noble/curves@~1.9.0":
   version "1.9.6"
   resolved "https://registry.npmjs.org/@noble/curves/-/curves-1.9.6.tgz"
   integrity sha512-GIKz/j99FRthB8icyJQA51E8Uk5hXmdyThjgQXRKiv9h0zeRlzSCLIzFw6K1LotZ3XuB7yzlf76qk7uBmTdFqA==
@@ -2955,6 +2980,11 @@ hyphenate-style-name@^1.0.3:
   version "1.1.0"
   resolved "https://registry.npmjs.org/hyphenate-style-name/-/hyphenate-style-name-1.1.0.tgz"
   integrity sha512-WDC/ui2VVRrz3jOVi+XtjqkDjiVjTtFaAGiW37k6b+ohyQ5wYDOGkvCZa8+H0nx3gyvv0+BST9xuOgIyGQ00gw==
+
+idb@^7.0.2:
+  version "7.1.1"
+  resolved "https://registry.npmjs.org/idb/-/idb-7.1.1.tgz"
+  integrity sha512-gchesWBzyvGHRO9W8tzUWFDycow5gwjvFKfyV9FF32Y7F50yZMp7mP+T2mJIWFx49zicqyC4uefHM17o6xKIVQ==
 
 ieee754@^1.2.1:
   version "1.2.1"
