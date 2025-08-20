@@ -5,7 +5,7 @@ import { AuthClient } from '@dfinity/auth-client';
 import { HttpAgent } from '@dfinity/agent';
 import { createActor } from '@/lib/ic/icpActors';
 
-export default function useICPWallet({ whitelist = [], host = 'https://icp0.io' } = {}) {
+export default function useICPWallet({ whitelist = [], host = 'https://ic0.app' } = {}) {
   const [connected, setConnected] = useState(false);
   const [principalId, setPrincipalId] = useState(null);
   const [actor, setActor] = useState(null);
@@ -51,9 +51,10 @@ export default function useICPWallet({ whitelist = [], host = 'https://icp0.io' 
 
       // Request login
       await client.login({
-        identityProvider: host === 'https://icp0.io' 
-          ? 'https://identity.ic0.app' 
-          : `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943`,
+        identityProvider: host && host.includes('localhost')
+          ? `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943`
+          : 'https://identity.ic0.app',
+        delegationTargets: Array.isArray(whitelist) && whitelist.length > 0 ? whitelist : undefined,
         onSuccess: () => {
           const identity = client.getIdentity();
           const principal = identity.getPrincipal();

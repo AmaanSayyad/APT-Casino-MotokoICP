@@ -41,11 +41,15 @@ actor {
   stable var maxDailyTotal : Nat = 10_000_000_000_000; // 100_000.00000000 in 8dp default
   stable var depositUsageEntries : [(Principal, (Nat64, Nat))] = [];
   var depositUsage : HashMap.HashMap<Principal, (Nat64, Nat)> = HashMap.HashMap<Principal, (Nat64, Nat)>(10, Principal.equal, principalHash);
+  // Snapshot of casino token balance at request time to verify real transfer happened
+  stable var depositSnapshotEntries : [(Principal, Nat)] = [];
+  var depositSnapshots : HashMap.HashMap<Principal, Nat> = HashMap.HashMap<Principal, Nat>(10, Principal.equal, principalHash);
 
   system func preupgrade() {
     balancesEntries := Iter.toArray(balances.entries());
     pendingDepositsEntries := Iter.toArray(pendingDeposits.entries());
     depositUsageEntries := Iter.toArray(depositUsage.entries());
+    depositSnapshotEntries := Iter.toArray(depositSnapshots.entries());
   };
 
   system func postupgrade() {
@@ -61,6 +65,10 @@ actor {
     depositUsage := HashMap.HashMap<Principal, (Nat64, Nat)>(depositUsageEntries.size(), Principal.equal, principalHash);
     for ((p, info) in depositUsageEntries.vals()) {
       depositUsage.put(p, info);
+    };
+    depositSnapshots := HashMap.HashMap<Principal, Nat>(depositSnapshotEntries.size(), Principal.equal, principalHash);
+    for ((p, n) in depositSnapshotEntries.vals()) {
+      depositSnapshots.put(p, n);
     };
   };
 
@@ -114,7 +122,8 @@ actor {
   type TokenActor = actor {
     icrc1_transfer : (Icrc1TransferArgs) -> async { #Ok : Nat; #Err : TransferError };
     icrc2_transfer_from : (Icrc2TransferFromArgs) -> async { #Ok : Nat; #Err : TransferFromError };
-    mint_to : (Principal, Nat) -> async ()
+    mint_to : (Principal, Nat) -> async ();
+    icrc1_balance_of : (Account) -> async Nat
   };
 
   func getTokenActorOrTrap() : TokenActor {
@@ -150,11 +159,14 @@ actor {
     depositNonce := depositNonce + 1;
     let timestamp = Nat64.fromIntWrap(Int.abs(Time.now()));
     
-    // Store pending deposit with nonce
-    pendingDeposits.put(caller, (amount, timestamp, depositNonce));
-    
-    // Return nonce and casino principal for NNS transfer
+    // Return casino principal for NNS transfer and snapshot current casino token balance
     let casinoPrincipal = switch (selfPrincipal) { case (?sp) sp; case null { assert false; caller } };
+    let token = getTokenActorOrTrap();
+    let casinoBalanceBefore = await token.icrc1_balance_of({ owner = casinoPrincipal; subaccount = null });
+
+    // Store pending deposit with nonce and balance snapshot
+    pendingDeposits.put(caller, (amount, timestamp, depositNonce));
+    depositSnapshots.put(caller, casinoBalanceBefore);
     
     (depositNonce, Principal.toText(casinoPrincipal))
   };
@@ -167,15 +179,23 @@ actor {
     if (expectedNonce != nonce) {
       return (false, 0); // Nonce mismatch
     };
-    
-    // Check if transfer was completed (this would need integration with token canister)
-    // For now, we'll assume the transfer was completed and process the deposit
+
+    // Verify transfer by checking casino token balance increased by at least expected amount
+    let snapshot = switch (depositSnapshots.get(caller)) { case (?s) s; case null 0 };
+    let token = getTokenActorOrTrap();
+    let casinoPrincipal = switch (selfPrincipal) { case (?sp) sp; case null { assert false; caller } };
+    let casinoBalanceNow = await token.icrc1_balance_of({ owner = casinoPrincipal; subaccount = null });
+    if (casinoBalanceNow < snapshot or (casinoBalanceNow - snapshot) < expectedAmount) {
+      return (false, 0);
+    };
+
     let current = switch (balances.get(caller)) { case (?n) n; case null 0 };
     let newBalance = current + expectedAmount;
     balances.put(caller, newBalance);
     
     // Remove pending deposit
     pendingDeposits.delete(caller);
+    depositSnapshots.delete(caller);
     
     // Update deposit usage tracking
     if (depositEnabled) {

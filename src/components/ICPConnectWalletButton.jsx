@@ -1,10 +1,11 @@
 "use client";
 import React, { useEffect } from 'react';
 import useICPWallet from '@/hooks/useICPWallet';
+import { IC_HOST } from '@/config/ic';
 
 export default function ICPConnectWalletButton({ 
   whitelist = [], 
-  host = 'https://icp0.io',
+  host = IC_HOST,
   onConnectionChange = null 
 }) {
   const { connected, principalId, isConnecting, connect, disconnect, available, identity } = useICPWallet({ whitelist, host });

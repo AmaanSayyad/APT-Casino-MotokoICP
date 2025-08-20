@@ -288,7 +288,7 @@ export default function Navbar() {
       // Store nonce for later verification
       localStorage.setItem('pendingDepositNonce', nonce.toString());
       localStorage.setItem('pendingDepositAmount', amountNat.toString());
-      localStorage.setItem('pendingDepositUserPrincipal', Principal.toText(walletIdentity.getPrincipal()));
+      localStorage.setItem('pendingDepositUserPrincipal', walletIdentity.getPrincipal().toText());
       localStorage.setItem('pendingDepositCasinoPrincipal', casinoPrincipalText);
       
       // Create NNS transfer URL with pre-filled details
@@ -787,6 +787,7 @@ export default function Navbar() {
           
           {/* ICP Wallet Button */}
           <ICPConnectWalletButton 
+            whitelist={[process.env.NEXT_PUBLIC_CASINO_CANISTER_ID || 'd7bsl-tiaaa-aaaan-qz5pq-cai']}
             onConnectionChange={({ connected, principalId, identity }) => {
               setIsConnected(connected);
               setPrincipalId(principalId);
@@ -929,10 +930,24 @@ export default function Navbar() {
             <div className="mb-6">
               <h4 className="text-sm font-medium text-white mb-2">Deposit APTC</h4>
               <div className="mb-2 text-[11px] text-gray-400">
-                Casino canister address:
-                <code className="ml-1 px-2 py-0.5 rounded bg-gray-800/60 text-gray-200">
-                  {process.env.NEXT_PUBLIC_CASINO_CANISTER_ID || 'd7bsl-tiaaa-aaaan-qz5pq-cai'}
-                </code>
+                <div className="flex items-center gap-2">
+                  <span>Casino canister address:</span>
+                  <code className="px-2 py-0.5 rounded bg-gray-800/60 text-gray-200">
+                    {process.env.NEXT_PUBLIC_CASINO_CANISTER_ID || 'd7bsl-tiaaa-aaaan-qz5pq-cai'}
+                  </code>
+                  <button
+                    onClick={() => {
+                      const val = process.env.NEXT_PUBLIC_CASINO_CANISTER_ID || 'd7bsl-tiaaa-aaaan-qz5pq-cai';
+                      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+                        navigator.clipboard.writeText(val);
+                        notification.success('Casino canister ID copied');
+                      }
+                    }}
+                    className="text-[10px] px-2 py-1 bg-gray-700/60 hover:bg-gray-600/60 rounded text-gray-100"
+                  >
+                    Copy
+                  </button>
+                </div>
               </div>
               <div className="mb-3">
                 <input
@@ -983,9 +998,23 @@ export default function Navbar() {
                 <div className="mt-3 p-3 bg-gray-900/30 rounded-lg border border-gray-700/30 text-xs text-gray-300 space-y-2">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-gray-400">Send APTC to</span>
-                    <code className="px-2 py-1 rounded bg-gray-800/60 text-gray-200 break-all">
-                      {localStorage.getItem('pendingDepositCasinoPrincipal') || process.env.NEXT_PUBLIC_CASINO_CANISTER_ID || 'd7bsl-tiaaa-aaaan-qz5pq-cai'}
-                    </code>
+                    <div className="flex items-center gap-2">
+                      <code className="px-2 py-1 rounded bg-gray-800/60 text-gray-200 break-all">
+                        {localStorage.getItem('pendingDepositCasinoPrincipal') || process.env.NEXT_PUBLIC_CASINO_CANISTER_ID || 'd7bsl-tiaaa-aaaan-qz5pq-cai'}
+                      </code>
+                      <button
+                        onClick={() => {
+                          const val = (typeof window !== 'undefined' && localStorage.getItem('pendingDepositCasinoPrincipal')) || process.env.NEXT_PUBLIC_CASINO_CANISTER_ID || 'd7bsl-tiaaa-aaaan-qz5pq-cai';
+                          if (typeof navigator !== 'undefined' && navigator.clipboard) {
+                            navigator.clipboard.writeText(val);
+                            notification.success('Casino canister ID copied');
+                          }
+                        }}
+                        className="text-[10px] px-2 py-1 bg-gray-700/60 hover:bg-gray-600/60 rounded text-gray-100"
+                      >
+                        Copy
+                      </button>
+                    </div>
                   </div>
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-gray-400">Memo</span>

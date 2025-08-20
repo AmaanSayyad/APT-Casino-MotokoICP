@@ -34,10 +34,11 @@ export const createICPActor = async ({
 
   try {
     // Create HTTP agent with the user's identity
-    const agent = new HttpAgent({
-      identity,
-      host: normalizedHost,
-    });
+    const agent = new HttpAgent({ identity, host: normalizedHost });
+    // Fetch root key only when using local replica
+    if (normalizedHost && (normalizedHost.includes('127.0.0.1') || normalizedHost.includes('localhost'))) {
+      await agent.fetchRootKey();
+    }
 
     // Create the actor
     const actor = Actor.createActor(idlFactory, {
