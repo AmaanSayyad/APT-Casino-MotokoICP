@@ -93,3 +93,4 @@ Thumbs.db
 .dfx/
 canister_ids.json
 src/declarations/
+.vercel
