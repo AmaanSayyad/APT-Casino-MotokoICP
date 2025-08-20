@@ -234,13 +234,15 @@ export default function Navbar() {
         return;
       }
       const actor = await getCasinoActor(walletIdentity);
-      const amountNat = BigInt(userBalance || '0');
+      // Convert decimal balance to whole number (assuming 8 decimal places for APTC)
+      const balanceInOctas = Math.round(parseFloat(userBalance || '0') * 100000000);
+      const amountNat = BigInt(balanceInOctas);
 
       // Mint caller's local balance to the provided address via backend faucet
       const sent = await actor.withdraw_mint_to(Principal.fromText(withdrawAddress.trim()));
 
       dispatch(setBalance('0'));
-      notification.success(`Successfully withdrew ${(Number(amountNat) / 100000000).toFixed(4)} APTC to ${withdrawAddress}!`);
+      notification.success(`Successfully withdrew your APTCs to ${withdrawAddress}!`);
       // Close the modal
       setShowBalanceModal(false);
     } catch (error) {

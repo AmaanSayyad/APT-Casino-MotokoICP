@@ -4,6 +4,7 @@ export const idlFactory = ({ IDL }) => {
     get_balance_of: IDL.Func([IDL.Principal], [IDL.Nat], ['query']),
     deposit: IDL.Func([IDL.Nat], [], []),
     withdraw_all: IDL.Func([], [IDL.Nat], []),
+    withdraw: IDL.Func([IDL.Nat], [IDL.Nat], []),
     random_blob: IDL.Func([], [IDL.Vec(IDL.Nat8)], []),
     random_nat: IDL.Func([IDL.Nat], [IDL.Nat], []),
     play_roulette: IDL.Func([], [IDL.Nat], []),
