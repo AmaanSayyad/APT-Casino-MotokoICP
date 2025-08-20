@@ -57,6 +57,7 @@ export default function Navbar() {
   const [showBalanceModal, setShowBalanceModal] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState("0");
   const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const [withdrawAddress, setWithdrawAddress] = useState("");
   const [depositAmount, setDepositAmount] = useState("");
   const [isDepositing, setIsDepositing] = useState(false);
   const [aptcTokenAddress, setAptcTokenAddress] = useState("");
@@ -220,10 +221,22 @@ export default function Navbar() {
         notification.error('No balance to withdraw');
         return;
       }
+      // Validate recipient address
+      if (!withdrawAddress.trim()) {
+        notification.error('Please enter recipient APTC token address');
+        return;
+      }
+      try {
+        Principal.fromText(withdrawAddress.trim());
+      } catch (e) {
+        notification.error('Invalid APTC token address format');
+        return;
+      }
       const actor = await getCasinoActor(walletIdentity);
-      const withdrawn = await actor.withdraw_all();
+      const amountNat = BigInt(userBalance || '0');
+      await actor.send_aptc_to_user(Principal.fromText(withdrawAddress.trim()), amountNat);
       dispatch(setBalance('0'));
-      notification.success(`Successfully withdrew ${(Number(withdrawn) / 100000000).toFixed(4)} APTC!`);
+      notification.success(`Successfully withdrew ${(Number(amountNat) / 100000000).toFixed(4)} APTC to ${withdrawAddress}!`);
       
       // Close the modal
       setShowBalanceModal(false);
@@ -898,9 +911,20 @@ export default function Navbar() {
             {/* Withdraw Section */}
             <div className="mb-4">
               <h4 className="text-sm font-medium text-white mb-2">Withdraw All APTC</h4>
+              <div className="mb-2">
+                <input
+                  type="text"
+                  value={withdrawAddress}
+                  onChange={(e) => setWithdrawAddress(e.target.value)}
+                  placeholder="Recipient APTC token address (principal)"
+                  className="w-full px-3 py-2 bg-gray-800/50 border border-gray-600/50 rounded text-white placeholder-gray-400 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/25"
+                  disabled={isWithdrawing}
+                />
+                <p className="text-[11px] text-gray-400 mt-1">Funds will be sent from casino treasury to this address.</p>
+              </div>
               <button
                 onClick={handleWithdraw}
-                disabled={!isConnected || parseFloat(userBalance || '0') <= 0 || isWithdrawing}
+                disabled={!isConnected || parseFloat(userBalance || '0') <= 0 || isWithdrawing || !withdrawAddress.trim()}
                 className="w-full px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white rounded font-medium transition-colors flex items-center justify-center gap-2"
               >
                 {isWithdrawing ? (
@@ -919,7 +943,7 @@ export default function Navbar() {
               </button>
               {isConnected && parseFloat(userBalance || '0') > 0 && (
                 <p className="text-xs text-gray-400 mt-1 text-center">
-                  Withdraw {parseFloat(userBalance || '0') / 100000000} APTC to your wallet
+                  Withdraw {parseFloat(userBalance || '0') / 100000000} APTC to the entered token address
                 </p>
               )}
             </div>

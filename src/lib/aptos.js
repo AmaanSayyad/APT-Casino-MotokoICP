@@ -1,4 +1,4 @@
-import { ICP, AptosConfig, NetworkToNetworkName } from "@aptos-labs/ts-sdk";
+import { Aptos, AptosConfig, Network } from "@aptos-labs/ts-sdk";
 import { 
   WalletCore, 
   NetworkInfo, 
@@ -32,21 +32,21 @@ export const APTOS_NETWORKS = {
 // Default network (can be changed via environment variable)
 export const DEFAULT_NETWORK = process.env.NEXT_PUBLIC_APTOS_NETWORK || 'testnet';
 
-// ICP client instance (ts-sdk v3+)
+// Aptos client instance (ts-sdk)
 const NETWORK_ENUM_MAP = {
-  mainnet: NetworkToNetworkName.MAINNET,
-  testnet: NetworkToNetworkName.TESTNET,
-  devnet: NetworkToNetworkName.DEVNET,
+  mainnet: Network.MAINNET,
+  testnet: Network.TESTNET,
+  devnet: Network.DEVNET,
 };
 
 const aptosConfig = new AptosConfig({
   network: NETWORK_ENUM_MAP[DEFAULT_NETWORK] || NetworkToNetworkName.TESTNET,
 });
 
-export const aptosClient = new ICP(aptosConfig);
+export const aptosClient = new Aptos(aptosConfig);
 
 // Debug log to verify network
-console.log("ICP client configured for network:", DEFAULT_NETWORK);
+console.log("Aptos client configured for network:", DEFAULT_NETWORK);
 console.log("Network enum:", NETWORK_ENUM_MAP[DEFAULT_NETWORK]);
 
 // Module addresses for our casino contracts
