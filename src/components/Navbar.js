@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { useSelector, useDispatch } from 'react-redux';
-import { setBalance, setLoading, loadBalanceFromStorage } from '@/store/balanceSlice';
+import { setBalance, addToBalance, setLoading, loadBalanceFromStorage } from '@/store/balanceSlice';
 import ICPConnectWalletButton from "./ICPConnectWalletButton";
 
 
@@ -280,7 +280,7 @@ export default function Navbar() {
     setIsDepositing(true);
     try {
       const actor = await getCasinoActor(walletIdentity);
-      const amountNat = BigInt(Math.floor(amount * 100000000));
+      const amountNat = BigInt(Math.round(amount * 100000000));
       
       // Request deposit nonce and casino principal from backend
       const [nonce, casinoPrincipalText] = await actor.request_deposit(amountNat);
@@ -331,14 +331,28 @@ export default function Navbar() {
       const [success, newBalance] = await actor.check_deposit_completion(BigInt(nonce));
       
       if (success) {
-        // Update local balance
-        dispatch(setBalance(String(newBalance)));
+        // Get the pending deposit amount from localStorage
+        const pendingAmount = localStorage.getItem('pendingDepositAmount');
+        
+        if (pendingAmount) {
+          // Add the deposit amount to the existing frontend balance
+          const depositAmountInAPTC = Number(pendingAmount) / 100000000;
+          dispatch(addToBalance(depositAmountInAPTC));
+          
+          // Force update the Redux state immediately
+          const currentBalance = parseFloat(userBalance || '0') / 100000000;
+          const newTotalBalance = currentBalance + depositAmountInAPTC;
+          const newBalanceInOctas = Math.round(newTotalBalance * 100000000);
+          dispatch(setBalance(String(newBalanceInOctas)));
+        }
         
         // Clear pending deposit data
         localStorage.removeItem('pendingDepositNonce');
         localStorage.removeItem('pendingDepositAmount');
         
-        notification.success(`Deposit completed successfully! New balance: ${(Number(newBalance) / 100000000).toFixed(8)} APTC`);
+        // Get the updated balance for the success message
+        const updatedBalance = (parseFloat(userBalance || '0') / 100000000) + (Number(pendingAmount || '0') / 100000000);
+        notification.success(`Deposit completed successfully! New balance: ${updatedBalance.toFixed(8)} APTC`);
       } else {
         notification.error('Deposit not yet completed. Please wait for the NNS transfer to be processed.');
       }
