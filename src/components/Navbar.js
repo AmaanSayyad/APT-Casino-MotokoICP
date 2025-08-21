@@ -89,20 +89,16 @@ export default function Navbar() {
     }
   ]);
 
-  // Load user balance from house account
+  // Load user balance from local storage only
   const loadUserBalance = async () => {
     if (!address || !walletIdentity) return;
     try {
       dispatch(setLoading(true));
-      const actor = await getCasinoActor(walletIdentity);
-      const backendBalance = await actor.get_balance_of(Principal.fromText(address));
-      dispatch(setBalance(String(backendBalance)));
-      // Also persist for quick UI load
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('userBalance', String(backendBalance));
-      }
+      // Only load from local storage, not from backend
+      const saved = loadBalanceFromStorage();
+      dispatch(setBalance(saved || '0'));
     } catch (error) {
-      console.error('Error loading user balance (backend):', error);
+      console.error('Error loading user balance (local):', error);
       const saved = loadBalanceFromStorage();
       dispatch(setBalance(saved || '0'));
     } finally {
@@ -223,12 +219,9 @@ export default function Navbar() {
 
     try {
       setIsWithdrawing(true);
-      // Determine current balance in octas (atomic units) without losing fractions
-      const rawBal = String(userBalance || '0');
-      const currentOctas = rawBal.includes('.')
-        ? Math.round(parseFloat(rawBal) * 100000000)
-        : Number(rawBal);
-      if (currentOctas <= 0) {
+      // Determine current balance in APTC (decimal format)
+      const currentBalance = parseFloat(userBalance || '0') / 100000000;
+      if (currentBalance <= 0) {
         notification.error('No balance to withdraw');
         return;
       }
@@ -240,7 +233,7 @@ export default function Navbar() {
       }
       
       const requestedAmount = parseFloat(withdrawAmount);
-      if (requestedAmount > (currentOctas / 100000000)) {
+      if (requestedAmount > currentBalance) {
         notification.error('Withdraw amount exceeds available balance');
         return;
       }
@@ -280,9 +273,10 @@ export default function Navbar() {
         // Exact amount withdraw
         await actor.withdraw_to(Principal.fromText(withdrawAddress.trim()), requestedOctas);
         
-        // Update balance by subtracting the withdrawn amount
-        const newBalance = currentOctas - Number(requestedOctas);
-        dispatch(setBalance(String(newBalance)));
+        // Update balance by subtracting the withdrawn amount (convert back to octas)
+        const newBalanceInAPTC = currentBalance - requestedAmount;
+        const newBalanceInOctas = Math.round(newBalanceInAPTC * 100000000);
+        dispatch(setBalance(String(newBalanceInOctas)));
         
         notification.success(`Successfully withdrew ${requestedAmount} APTC to ${withdrawAddress}!`);
       } else {
@@ -418,16 +412,26 @@ export default function Navbar() {
       const [success, newBalance] = await actor.check_deposit_completion(BigInt(nonce));
       
       if (success) {
-        // Use backend authoritative balance (newBalance is Nat in octas)
-        dispatch(setBalance(String(newBalance)));
-        
-        // Clear pending deposit data
-        localStorage.removeItem('pendingDepositNonce');
-        localStorage.removeItem('pendingDepositAmount');
-        
-        // Get the updated balance for the success message
-        const updatedBalance = Number(newBalance) / 100000000;
-        notification.success(`Deposit completed successfully! New balance: ${updatedBalance.toFixed(8)} APTC`);
+        // Get the pending deposit amount from localStorage
+        const pendingAmount = localStorage.getItem('pendingDepositAmount');
+        if (pendingAmount) {
+          const depositAmountInAPTC = Number(pendingAmount) / 100000000;
+          const currentBalanceInOctas = parseFloat(userBalance || '0');
+          const currentBalanceInAPTC = currentBalanceInOctas / 100000000;
+          const newTotalBalanceInAPTC = currentBalanceInAPTC + depositAmountInAPTC;
+          const newTotalBalanceInOctas = Math.round(newTotalBalanceInAPTC * 100000000);
+          
+          // Update local balance (in octas format)
+          dispatch(setBalance(String(newTotalBalanceInOctas)));
+          
+          // Clear pending deposit data
+          localStorage.removeItem('pendingDepositNonce');
+          localStorage.removeItem('pendingDepositAmount');
+          
+          notification.success(`Deposit completed successfully! New balance: ${newTotalBalanceInAPTC.toFixed(8)} APTC`);
+        } else {
+          notification.error('Deposit completed but pending amount not found');
+        }
       } else {
         notification.error('Deposit not yet completed. Please wait for the NNS transfer to be processed.');
       }
@@ -1017,7 +1021,7 @@ export default function Navbar() {
             <div className="mb-4 p-3 bg-gradient-to-r from-green-900/20 to-green-800/10 rounded-lg border border-green-800/30">
               <span className="text-sm text-gray-300">Current Balance:</span>
               <div className="text-lg text-green-300 font-bold">
-                {isLoadingBalance ? 'Loading...' : `${(parseFloat(userBalance) / 100000000).toFixed(3)} APTC`}
+                {isLoadingBalance ? 'Loading...' : `${(parseFloat(userBalance || '0') / 100000000).toFixed(3)} APTC`}
               </div>
             </div>
             
@@ -1192,10 +1196,22 @@ export default function Navbar() {
                 <label className="block text-gray-300 mb-2">Withdraw Amount (APTC)</label>
                 <div className="flex gap-2">
                   <input
-                    type="text"
+                    type="number"
                     value={withdrawAmount}
-                    onChange={(e) => setWithdrawAmount(e.target.value)}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      const maxAmount = parseFloat(userBalance || '0') / 100000000;
+                      if (parseFloat(value) > maxAmount) {
+                        setWithdrawAmount(maxAmount.toString());
+                        notification.info(`Amount capped at maximum available balance: ${maxAmount.toFixed(8)} APTC`);
+                      } else {
+                        setWithdrawAmount(value);
+                      }
+                    }}
                     placeholder="0.00"
+                    min="0"
+                    max={(parseFloat(userBalance || '0') / 100000000)}
+                    step="0.00000001"
                     className="flex-1 px-3 py-2 bg-gray-800/50 border border-gray-600/50 rounded text-white placeholder-gray-400 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/25"
                     disabled={isWithdrawing}
                   />
@@ -1214,7 +1230,7 @@ export default function Navbar() {
               
               <button
                 onClick={handleWithdraw}
-                disabled={!isConnected || parseFloat(userBalance || '0') <= 0 || isWithdrawing || !withdrawAddress.trim() || !withdrawAmount || parseFloat(withdrawAmount) <= 0}
+                disabled={!isConnected || parseFloat(userBalance || '0') <= 0 || isWithdrawing || !withdrawAddress.trim() || !withdrawAmount || parseFloat(withdrawAmount) <= 0 || parseFloat(withdrawAmount) > (parseFloat(userBalance || '0') / 100000000)}
                 className="w-full px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white rounded font-medium transition-colors flex items-center justify-center gap-2"
               >
                 {isWithdrawing ? (
@@ -1227,7 +1243,7 @@ export default function Navbar() {
                 ) : 'Connect Wallet'}
                 {isConnected && parseFloat(userBalance || '0') > 0 && !isWithdrawing && (
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    <path strokeLinecap="round" strokeLinejoinround="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                   </svg>
                 )}
               </button>
