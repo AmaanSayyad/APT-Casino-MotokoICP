@@ -15,6 +15,7 @@ export const idlFactory = ({ IDL }) => {
     send_aptc_to_user: IDL.Func([IDL.Principal, IDL.Nat], [], []),
     mint_aptc_to: IDL.Func([IDL.Principal, IDL.Nat], [], []),
     withdraw_balance_to: IDL.Func([IDL.Principal], [IDL.Nat], []),
+    withdraw_to: IDL.Func([IDL.Principal, IDL.Nat], [IDL.Nat], []),
     withdraw_mint_to: IDL.Func([IDL.Principal], [IDL.Nat], []),
     request_deposit: IDL.Func([IDL.Nat], [IDL.Nat, IDL.Text], []),
     check_deposit_completion: IDL.Func([IDL.Nat], [IDL.Bool, IDL.Nat], []),

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { useSelector, useDispatch } from 'react-redux';
-import { setBalance, addToBalance, setLoading, loadBalanceFromStorage } from '@/store/balanceSlice';
+import { setBalance, setLoading, loadBalanceFromStorage } from '@/store/balanceSlice';
 import ICPConnectWalletButton from "./ICPConnectWalletButton";
 
 
@@ -91,14 +91,20 @@ export default function Navbar() {
 
   // Load user balance from house account
   const loadUserBalance = async () => {
-    if (!address) return;
+    if (!address || !walletIdentity) return;
     try {
       dispatch(setLoading(true));
+      const actor = await getCasinoActor(walletIdentity);
+      const backendBalance = await actor.get_balance_of(Principal.fromText(address));
+      dispatch(setBalance(String(backendBalance)));
+      // Also persist for quick UI load
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('userBalance', String(backendBalance));
+      }
+    } catch (error) {
+      console.error('Error loading user balance (backend):', error);
       const saved = loadBalanceFromStorage();
       dispatch(setBalance(saved || '0'));
-    } catch (error) {
-      console.error('Error loading user balance (local):', error);
-      dispatch(setBalance('0'));
     } finally {
       dispatch(setLoading(false));
     }
@@ -217,8 +223,12 @@ export default function Navbar() {
 
     try {
       setIsWithdrawing(true);
-      const balanceInApt = parseFloat(userBalance || '0') / 100000000;
-      if (balanceInApt <= 0) {
+      // Determine current balance in octas (atomic units) without losing fractions
+      const rawBal = String(userBalance || '0');
+      const currentOctas = rawBal.includes('.')
+        ? Math.round(parseFloat(rawBal) * 100000000)
+        : Number(rawBal);
+      if (currentOctas <= 0) {
         notification.error('No balance to withdraw');
         return;
       }
@@ -234,12 +244,32 @@ export default function Navbar() {
         return;
       }
       const actor = await getCasinoActor(walletIdentity);
-      // Convert decimal balance to whole number (assuming 8 decimal places for APTC)
-      const balanceInOctas = Math.round(parseFloat(userBalance || '0') * 100000000);
-      const amountNat = BigInt(balanceInOctas);
+      // If user typed an amount, withdraw that exact amount; else withdraw all
+      const decimalToOctasNat = (text) => {
+        const s = String(text).trim();
+        if (!s) return 0n;
+        if (isNaN(Number(s))) return 0n;
+        const negative = s.startsWith('-');
+        const raw = negative ? s.slice(1) : s;
+        const parts = raw.split('.');
+        const wholePart = parts[0] || '0';
+        const fracRaw = parts[1] || '';
+        const fracPart = (fracRaw + '00000000').slice(0, 8);
+        const OCTAS = 100000000n;
+        const whole = BigInt(wholePart);
+        const frac = BigInt(fracPart === '' ? '0' : fracPart);
+        const val = whole * OCTAS + frac;
+        return negative ? 0n : val;
+      };
 
-      // Mint caller's local balance to the provided address via backend faucet
-      const sent = await actor.withdraw_mint_to(Principal.fromText(withdrawAddress.trim()));
+      const requestedOctas = decimalToOctasNat(withdrawAmount);
+      if (requestedOctas > 0n) {
+        // Exact amount withdraw
+        await actor.withdraw_to(Principal.fromText(withdrawAddress.trim()), requestedOctas);
+      } else {
+        // Withdraw all
+        await actor.withdraw_mint_to(Principal.fromText(withdrawAddress.trim()));
+      }
 
       dispatch(setBalance('0'));
       notification.success(`Successfully withdrew your APTCs to ${withdrawAddress}!`);
@@ -282,7 +312,35 @@ export default function Navbar() {
     setIsDepositing(true);
     try {
       const actor = await getCasinoActor(walletIdentity);
-      const amountNat = BigInt(Math.round(amount * 100000000));
+      // Convert decimal text to octas (8 dp) without rounding
+      const decimalToOctasNat = (text) => {
+        const s = String(text).trim();
+        if (!s || isNaN(Number(s))) return 0n;
+        const negative = s.startsWith('-');
+        const raw = negative ? s.slice(1) : s;
+        const parts = raw.split('.');
+        const wholePart = parts[0] || '0';
+        const fracRaw = parts[1] || '';
+        const fracPart = (fracRaw + '00000000').slice(0, 8); // truncate beyond 8dp
+        const OCTAS = 100000000n;
+        const whole = BigInt(wholePart);
+        const frac = BigInt(fracPart === '' ? '0' : fracPart);
+        const val = whole * OCTAS + frac;
+        return negative ? 0n : val; // disallow negatives
+      };
+      const amountNat = decimalToOctasNat(depositAmount);
+      const octasToDecimalString = (n) => {
+        const s = n.toString();
+        const len = s.length;
+        if (len <= 8) {
+          const frac = '0'.repeat(8 - len) + s;
+          return `0.${frac}`;
+        }
+        const whole = s.slice(0, len - 8);
+        const frac = s.slice(len - 8);
+        // keep all 8 decimals to avoid rounding on consumer side
+        return `${whole}.${frac}`;
+      };
       
       // Request deposit nonce and casino principal from backend
       const [nonce, casinoPrincipalText] = await actor.request_deposit(amountNat);
@@ -294,7 +352,8 @@ export default function Navbar() {
       localStorage.setItem('pendingDepositCasinoPrincipal', casinoPrincipalText);
       
       // Create NNS transfer URL with pre-filled details
-      const nnsUrl = `https://nns.ic0.app/wallet/?u=f2kju-siaaa-aaaan-qz5zq-cai&to=${casinoPrincipalText}&amount=${amount}&memo=${nonce}`;
+      const nnsAmount = octasToDecimalString(amountNat);
+      const nnsUrl = `https://nns.ic0.app/wallet/?u=f2kju-siaaa-aaaan-qz5zq-cai&to=${casinoPrincipalText}&amount=${nnsAmount}&memo=${nonce}`;
       
       // Open NNS in new tab
       window.open(nnsUrl, '_blank');
@@ -333,27 +392,15 @@ export default function Navbar() {
       const [success, newBalance] = await actor.check_deposit_completion(BigInt(nonce));
       
       if (success) {
-        // Get the pending deposit amount from localStorage
-        const pendingAmount = localStorage.getItem('pendingDepositAmount');
-        
-        if (pendingAmount) {
-          // Add the deposit amount to the existing frontend balance
-          const depositAmountInAPTC = Number(pendingAmount) / 100000000;
-          dispatch(addToBalance(depositAmountInAPTC));
-          
-          // Force update the Redux state immediately
-          const currentBalance = parseFloat(userBalance || '0') / 100000000;
-          const newTotalBalance = currentBalance + depositAmountInAPTC;
-          const newBalanceInOctas = Math.round(newTotalBalance * 100000000);
-          dispatch(setBalance(String(newBalanceInOctas)));
-        }
+        // Use backend authoritative balance (newBalance is Nat in octas)
+        dispatch(setBalance(String(newBalance)));
         
         // Clear pending deposit data
         localStorage.removeItem('pendingDepositNonce');
         localStorage.removeItem('pendingDepositAmount');
         
         // Get the updated balance for the success message
-        const updatedBalance = (parseFloat(userBalance || '0') / 100000000) + (Number(pendingAmount || '0') / 100000000);
+        const updatedBalance = Number(newBalance) / 100000000;
         notification.success(`Deposit completed successfully! New balance: ${updatedBalance.toFixed(8)} APTC`);
       } else {
         notification.error('Deposit not yet completed. Please wait for the NNS transfer to be processed.');

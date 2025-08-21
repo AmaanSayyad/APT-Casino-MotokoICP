@@ -10,6 +10,8 @@ service : {
   deposit: (nat) -> ();
   withdraw_all: () -> (nat);
   withdraw: (nat) -> (nat);
+  withdraw_balance_to: (principal) -> (nat);
+  withdraw_to: (principal, nat) -> (nat);
   random_blob: () -> (blob);
   random_nat: (nat) -> (nat);
   play_roulette: () -> (nat);

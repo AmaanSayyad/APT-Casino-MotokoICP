@@ -302,6 +302,30 @@ actor {
     }
   };
 
+  // Withdraw an exact amount from caller's local balance to a specified principal address
+  public shared ({ caller }) func withdraw_to(toOwner : Principal, amount : Nat) : async Nat {
+    let bal = switch (balances.get(caller)) { case (?n) n; case null 0 };
+    assert bal >= amount;
+    if (amount == 0) { return 0 };
+    let token = getTokenActorOrTrap();
+    let to : Account = { owner = toOwner; subaccount = null };
+    let res = await token.icrc1_transfer({
+      from_subaccount = null;
+      to = to;
+      amount = amount;
+      fee = null;
+      memo = null;
+      created_at_time = null;
+    });
+    switch (res) {
+      case (#Ok _) {
+        balances.put(caller, bal - amount);
+        amount
+      };
+      case (#Err e) { assert false; 0 };
+    }
+  };
+
   // Mint the caller's entire local balance to a specified principal address, then zero local balance
   public shared ({ caller }) func withdraw_mint_to(toOwner : Principal) : async Nat {
     let current = switch (balances.get(caller)) { case (?n) n; case null 0 };
