@@ -35,14 +35,14 @@ const SOUNDS = {
   bet: "/sounds/bet.mp3",
 };
 
-const Game = ({ betSettings = {}, onGameStatusChange }) => {
+const Game = ({ betSettings = {}, onGameStatusChange, onGameComplete }) => {
   // Redux integration
   const dispatch = useDispatch();
   const { userBalance } = useSelector((state) => state.balance);
 
   // Game Settings
   const defaultSettings = {
-    betAmount: 1, // Default to 1 APTC
+    betAmount: 1, // Default to 1 APT
     mines: 5,
     isAutoBetting: false,
     tilesToReveal: 5,
@@ -306,15 +306,15 @@ const Game = ({ betSettings = {}, onGameStatusChange }) => {
       const startGameWithBet = async () => {
         // Check if wallet is connected first
         if (!window.aptos || !window.aptos.account) {
-          toast.error('Please connect your ICP wallet first');
+          toast.error('Please connect your Aptos wallet first');
           return;
         }
         
         // Check Redux balance
-        const currentBalance = parseFloat(userBalance || '0') / 100000000; // Convert from octas to APTC
+        const currentBalance = parseFloat(userBalance || '0') / 100000000; // Convert from octas to APT
         
         if (currentBalance < settings.betAmount) {
-          toast.error(`Insufficient balance. You have ${currentBalance.toFixed(8)} APTC but need ${settings.betAmount} APTC`);
+          toast.error(`Insufficient balance. You have ${currentBalance.toFixed(8)} APT but need ${settings.betAmount} APT`);
           return;
         }
 
@@ -325,17 +325,17 @@ const Game = ({ betSettings = {}, onGameStatusChange }) => {
           dispatch(setBalance(newBalance));
           
           console.log('=== STARTING MINES BET WITH REDUX BALANCE ===');
-          console.log('Bet amount (APTC):', settings.betAmount);
-          console.log('Current balance (APTC):', currentBalance);
+          console.log('Bet amount (APT):', settings.betAmount);
+          console.log('Current balance (APT):', currentBalance);
           console.log('Mines count:', settings.mines);
-          console.log('Balance deducted. New balance:', (parseFloat(newBalance) / 100000000).toFixed(8), 'APTC');
+          console.log('Balance deducted. New balance:', (parseFloat(newBalance) / 100000000).toFixed(8), 'APT');
           
           // Start the game immediately
           setIsPlaying(true);
           setHasPlacedBet(true);
           playSound('bet');
           
-          toast.success(`Bet placed! ${settings.betAmount} APTC deducted from balance`);
+          toast.success(`Bet placed! ${settings.betAmount} APT deducted from balance`);
           toast.info(`Game starting...`);
           
           // Special message if AI-assisted auto betting
@@ -345,7 +345,7 @@ const Game = ({ betSettings = {}, onGameStatusChange }) => {
           } else if (settings.isAutoBetting) {
             toast.info(`Auto betting mode: Will reveal ${settings.tilesToReveal || 5} tiles`);
           } else {
-            toast.info(`Bet placed: ${settings.betAmount} APTC, ${settings.mines} mines`);
+            toast.info(`Bet placed: ${settings.betAmount} APT, ${settings.mines} mines`);
           }
           
           // If auto-betting is enabled, automatically reveal tiles with minimal delay
@@ -412,6 +412,17 @@ const Game = ({ betSettings = {}, onGameStatusChange }) => {
           if (onGameStatusChange) {
             onGameStatusChange({ isPlaying: false, hasPlacedBet: false });
           }
+          
+          // Notify parent about game completion
+          if (onGameComplete) {
+            onGameComplete({
+              mines: minesCount,
+              betAmount: betAmount,
+              won: false,
+              payout: 0,
+              multiplier: 0
+            });
+          }
         };
         
         // Use setTimeout to ensure state updates happen properly
@@ -454,6 +465,17 @@ const Game = ({ betSettings = {}, onGameStatusChange }) => {
               // Force parent component to update immediately
               if (onGameStatusChange) {
                 onGameStatusChange({ isPlaying: false, hasPlacedBet: false });
+              }
+              
+              // Notify parent about game completion
+              if (onGameComplete) {
+                onGameComplete({
+                  mines: minesCount,
+                  betAmount: betAmount,
+                  won: true,
+                  payout: calculatePayout(),
+                  multiplier: multiplier
+                });
               }
             };
             
@@ -624,7 +646,7 @@ const Game = ({ betSettings = {}, onGameStatusChange }) => {
       
       // Cashout is just a local operation - no blockchain transaction needed
       // The actual payout was already handled in the initial bet transaction
-      toast.success(`Cashed out: ${payout.toFixed(4)} APTC (${multiplier.toFixed(2)}x)`);
+      toast.success(`Cashed out: ${payout.toFixed(4)} APT (${multiplier.toFixed(2)}x)`);
       playSound('cashout');
       
       // Update user balance in Redux store (add payout to current balance)
@@ -672,6 +694,17 @@ const Game = ({ betSettings = {}, onGameStatusChange }) => {
         // Force parent component to update immediately
         if (onGameStatusChange) {
           onGameStatusChange({ isPlaying: false, hasPlacedBet: false });
+        }
+        
+        // Notify parent about game completion
+        if (onGameComplete) {
+          onGameComplete({
+            mines: minesCount,
+            betAmount: betAmount,
+            won: true,
+            payout: payout,
+            multiplier: multiplier
+          });
         }
       };
       
@@ -938,7 +971,7 @@ const Game = ({ betSettings = {}, onGameStatusChange }) => {
               } rounded-lg text-white font-bold shadow-lg transition-all flex items-center justify-center gap-2`}
             >
               <FaCoins className="text-yellow-300" />
-              <span>CASH OUT ({calculatePayout()} APTC)</span>
+              <span>CASH OUT ({calculatePayout()} APT)</span>
             </button>
           </div>
         )}
@@ -948,7 +981,7 @@ const Game = ({ betSettings = {}, onGameStatusChange }) => {
           <div className="text-center py-3 bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg text-white font-bold">
             <span>🎉 CONGRATULATIONS! YOU WON! 🎉</span>
             <div className="mt-2 text-sm opacity-90">
-              Winnings: {calculatePayout()} APTC ({multiplier.toFixed(2)}x)
+              Winnings: {calculatePayout()} APT ({multiplier.toFixed(2)}x)
             </div>
           </div>
         )}
