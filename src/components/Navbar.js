@@ -55,7 +55,7 @@ export default function Navbar() {
 
   // User balance management
   const [showBalanceModal, setShowBalanceModal] = useState(false);
-  const [withdrawAmount, setWithdrawAmount] = useState("0");
+  const [withdrawAmount, setWithdrawAmount] = useState("");
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [withdrawAddress, setWithdrawAddress] = useState("");
   const [depositAmount, setDepositAmount] = useState("");
@@ -232,6 +232,19 @@ export default function Navbar() {
         notification.error('No balance to withdraw');
         return;
       }
+      
+      // Validate withdraw amount
+      if (!withdrawAmount || parseFloat(withdrawAmount) <= 0) {
+        notification.error('Please enter a valid withdraw amount');
+        return;
+      }
+      
+      const requestedAmount = parseFloat(withdrawAmount);
+      if (requestedAmount > (currentOctas / 100000000)) {
+        notification.error('Withdraw amount exceeds available balance');
+        return;
+      }
+      
       // Validate recipient address
       if (!withdrawAddress.trim()) {
         notification.error('Please enter recipient APTC token address');
@@ -266,13 +279,26 @@ export default function Navbar() {
       if (requestedOctas > 0n) {
         // Exact amount withdraw
         await actor.withdraw_to(Principal.fromText(withdrawAddress.trim()), requestedOctas);
+        
+        // Update balance by subtracting the withdrawn amount
+        const newBalance = currentOctas - Number(requestedOctas);
+        dispatch(setBalance(String(newBalance)));
+        
+        notification.success(`Successfully withdrew ${requestedAmount} APTC to ${withdrawAddress}!`);
       } else {
         // Withdraw all
         await actor.withdraw_mint_to(Principal.fromText(withdrawAddress.trim()));
+        
+        // Set balance to 0 since all was withdrawn
+        dispatch(setBalance('0'));
+        
+        notification.success(`Successfully withdrew all APTC to ${withdrawAddress}!`);
       }
-
-      dispatch(setBalance('0'));
-      notification.success(`Successfully withdrew your APTCs to ${withdrawAddress}!`);
+      
+      // Clear withdraw form
+      setWithdrawAmount("");
+      setWithdrawAddress("");
+      
       // Close the modal
       setShowBalanceModal(false);
     } catch (error) {
@@ -838,7 +864,11 @@ export default function Navbar() {
                     {isLoadingBalance ? 'Loading...' : `${(parseFloat(userBalance || '0') / 100000000).toFixed(3)} APTC`}
                   </span>
                   <button
-                    onClick={() => setShowBalanceModal(true)}
+                    onClick={() => {
+                  setShowBalanceModal(true);
+                  setWithdrawAmount("");
+                  setWithdrawAddress("");
+                }}
                     className="ml-2 text-xs bg-green-600/30 hover:bg-green-500/30 text-green-300 px-2 py-1 rounded transition-colors"
                   >
                     Manage
@@ -935,6 +965,8 @@ export default function Navbar() {
                     onClick={() => {
                       setShowBalanceModal(true);
                       setShowMobileMenu(false);
+                      setWithdrawAmount("");
+                      setWithdrawAddress("");
                     }}
                     className="w-full text-xs bg-green-600/30 hover:bg-green-500/30 text-green-300 px-3 py-2 rounded transition-colors"
                   >
@@ -1142,7 +1174,7 @@ export default function Navbar() {
 
             {/* Withdraw Section */}
             <div className="mb-4">
-              <h4 className="text-sm font-medium text-white mb-2">Withdraw All APTC</h4>
+              <h4 className="text-sm font-medium text-white mb-2">Withdraw APTC</h4>
               <div className="mb-2">
                 <input
                   type="text"
@@ -1154,9 +1186,35 @@ export default function Navbar() {
                 />
                 <p className="text-[11px] text-gray-400 mt-1">Funds will be sent from casino treasury to this address.</p>
               </div>
+              
+              {/* Withdraw Amount Input */}
+              <div className="mb-2">
+                <label className="block text-gray-300 mb-2">Withdraw Amount (APTC)</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={withdrawAmount}
+                    onChange={(e) => setWithdrawAmount(e.target.value)}
+                    placeholder="0.00"
+                    className="flex-1 px-3 py-2 bg-gray-800/50 border border-gray-600/50 rounded text-white placeholder-gray-400 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/25"
+                    disabled={isWithdrawing}
+                  />
+                  <button
+                    onClick={() => setWithdrawAmount((parseFloat(userBalance || '0') / 100000000).toString())}
+                    className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded transition-colors"
+                    disabled={isWithdrawing}
+                  >
+                    Max
+                  </button>
+                </div>
+                <p className="text-[11px] text-gray-400 mt-1">
+                  Available: {(parseFloat(userBalance || '0') / 100000000).toFixed(8)} APTC
+                </p>
+              </div>
+              
               <button
                 onClick={handleWithdraw}
-                disabled={!isConnected || parseFloat(userBalance || '0') <= 0 || isWithdrawing || !withdrawAddress.trim()}
+                disabled={!isConnected || parseFloat(userBalance || '0') <= 0 || isWithdrawing || !withdrawAddress.trim() || !withdrawAmount || parseFloat(withdrawAmount) <= 0}
                 className="w-full px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white rounded font-medium transition-colors flex items-center justify-center gap-2"
               >
                 {isWithdrawing ? (
@@ -1165,7 +1223,7 @@ export default function Navbar() {
                     Processing...
                   </>
                 ) : isConnected ? (
-                  parseFloat(userBalance || '0') > 0 ? 'Withdraw All APTC' : 'No Balance'
+                  parseFloat(userBalance || '0') > 0 ? 'Withdraw APTC' : 'No Balance'
                 ) : 'Connect Wallet'}
                 {isConnected && parseFloat(userBalance || '0') > 0 && !isWithdrawing && (
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1173,9 +1231,10 @@ export default function Navbar() {
                   </svg>
                 )}
               </button>
-              {isConnected && parseFloat(userBalance || '0') > 0 && (
+              
+              {isConnected && parseFloat(userBalance || '0') > 0 && withdrawAmount && parseFloat(withdrawAmount) > 0 && (
                 <p className="text-xs text-gray-400 mt-1 text-center">
-                  Withdraw {parseFloat(userBalance || '0') / 100000000} APTC to the entered token address
+                  Withdraw {parseFloat(withdrawAmount)} APTC to the entered token address
                 </p>
               )}
             </div>
