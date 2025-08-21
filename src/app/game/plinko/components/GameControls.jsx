@@ -334,40 +334,40 @@ export default function GameControls({ onBet, onRowChange, onRiskLevelChange, on
         {/* Quick Bet Amounts */}
         <div className="grid grid-cols-3 gap-2 mt-2">
           <button
-            onClick={() => handleBetAmountChange(0.01)}
+            onClick={() => handleBetAmountChange(10)}
             className="bg-[#2A0025] border border-[#333947] rounded-lg py-2 text-xs text-white hover:bg-[#3A0035] transition-colors"
           >
-            0.01 APTC
+            10 APTC
           </button>
           <button
-            onClick={() => handleBetAmountChange(0.05)}
+            onClick={() => handleBetAmountChange(50)}
             className="bg-[#2A0025] border border-[#333947] rounded-lg py-2 text-xs text-white hover:bg-[#3A0025] transition-colors"
           >
-            0.05 APTC
+            50 APTC
           </button>
           <button
-            onClick={() => handleBetAmountChange(0.1)}
+            onClick={() => handleBetAmountChange(100)}
             className="bg-[#2A0025] border border-[#333947] rounded-lg py-2 text-xs text-white hover:bg-[#3A0035] transition-colors"
           >
-            0.1 APTC
+            100 APTC
           </button>
           <button
-            onClick={() => handleBetAmountChange(0.25)}
+            onClick={() => handleBetAmountChange(200)}
             className="bg-[#2A0025] border border-[#333947] rounded-lg py-2 text-xs text-white hover:bg-[#3A0035] transition-colors"
           >
-            0.25 APTC
+            200 APTC
           </button>
           <button
-            onClick={() => handleBetAmountChange(0.5)}
+            onClick={() => handleBetAmountChange(300)}
             className="bg-[#2A0025] border border-[#333947] rounded-lg py-2 text-xs text-white hover:bg-[#3A0035] transition-colors"
           >
-            0.5 APTC
+            300 APTC
           </button>
           <button
-            onClick={() => handleBetAmountChange(1)}
+            onClick={() => handleBetAmountChange(500)}
             className="bg-[#2A0025] border border-[#333947] rounded-lg py-2 text-xs text-white hover:bg-[#3A0025] transition-colors"
           >
-            1.0 APTC
+            500 APTC
           </button>
         </div>
       </div>

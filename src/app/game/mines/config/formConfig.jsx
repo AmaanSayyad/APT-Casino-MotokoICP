@@ -4,8 +4,8 @@ export const manualFormConfig = {
       id: "betAmount",
       label: "Bet Amount (APTC)",
       type: "singleSelect",
-      options: [0.1, 0.5, 1, 2, 5, 5, 10],
-      defaultValue: 1,
+      options: [10, 50, 100, 200, 300, 500],
+      defaultValue: 100,
       placeholder: "Select bet amount",
     },
     {
@@ -27,8 +27,8 @@ export const autoFormConfig = {
       id: "betAmount",
       label: "Bet Amount (APTC)",
       type: "singleSelect",
-      options: [0.1, 0.5, 1, 2, 5, 10],
-      defaultValue: 1,
+      options: [10, 50, 100, 200, 300, 500],
+      defaultValue: 100,
       placeholder: "Select bet amount",
     },
     {

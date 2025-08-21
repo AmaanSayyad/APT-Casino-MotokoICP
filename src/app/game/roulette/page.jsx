@@ -2052,62 +2052,16 @@ export default function GameRoulette() {
     }
 
     try {
-      const amount = parseEther(winnings.toString()); // Use winnings as the amount to withdraw
-
-      reset(e); // Reset the state after withdrawing
-
-      // Simulate the contract interaction
-      const withdrawSimulation =
-        await ViemClient.publicPharosSepoliaClient.simulateContract({
-          address: rouletteContractAddress,
-          abi: rouletteABI,
-          functionName: "withdrawTokens",
-          args: [amount],
-          account: address,
-        });
-
-      // Execute the contract transaction
-      const withdrawResponse = await ViemClient.getWalletClient().writeContract(
-        withdrawSimulation.request
-      );
-
-      if (withdrawResponse) {
-        // Extract hash from response if it's an object
-        const responseHash = typeof withdrawResponse === 'object' ?
-          (withdrawResponse.hash || String(withdrawResponse)) :
-          withdrawResponse;
-
-        console.log("Winnings withdrawn successfully:", responseHash);
-        alert("Winnings withdrawn successfully!");
-      } else {
-        throw new Error("Withdrawal transaction failed.");
-      }
+      // For Aptos wallet, just reset the state (no Ethereum withdrawal)
+      reset(e);
+      alert("Winnings processed successfully!");
     } catch (error) {
-      console.error("Error withdrawing winnings:", error);
-      alert(`Failed to withdraw winnings: ${error.message}`);
+      console.error("Error processing winnings:", error);
+      alert(`Failed to process winnings: ${error.message}`);
     }
   }, [playSound, winnings, reset]);
 
-  const config = undefined; // wagmi removed
-
-  const contractAddress = '0xbD8Ca722093d811bF314dDAB8438711a4caB2e73'; // ✅ FIX THIS
-
-  // Remove the custom writeContract function and use the imported one directly
-  const waitForTransaction = async (hash) => {
-    try {
-      // Ensure hash is a string, not an object
-      const hashStr = typeof hash === 'object' && hash.hash ? hash.hash : hash;
-      const receipt = await waitForTransactionReceipt({
-        hash: hashStr,
-        chainId: 0x138b
-      });
-      setTransactionReceipt(receipt);
-      return receipt;
-    } catch (error) {
-      console.error("Wait for transaction error:", error);
-      throw error;
-    }
-  };
+  // Ethereum-related code removed for Aptos wallet compatibility
 
   // Update the checkNetwork function to focus on correct wallet detection
   const checkNetwork = async () => {
@@ -2124,40 +2078,8 @@ export default function GameRoulette() {
         return;
       }
 
-      // Fall back to window.ethereum check with retry
-      const checkWithRetry = async (attempts = 3) => {
-        if (window.ethereum && typeof window.ethereum.request === 'function') {
-          console.log("Ethereum provider found, requesting chain ID...");
-          try {
-            const chainId = await window.ethereum.request({ method: "eth_chainId" });
-            console.log("Current chain ID:", chainId);
-
-            // Support both Mantle Sepolia (0x138b) and Pharos Devnet (0xc352)
-            const isCorrectNetwork = chainId === "0x138b" || chainId === "0xc352";
-            console.log("Is correct network:", isCorrectNetwork);
-            setCorrectNetwork(isCorrectNetwork);
-          } catch (error) {
-            console.error("Error checking chain ID:", error);
-            if (attempts > 1) {
-              console.log(`Retrying... (${attempts - 1} attempts left)`);
-              setTimeout(() => checkWithRetry(attempts - 1), 500);
-            } else {
-              setCorrectNetwork(false);
-            }
-          }
-        } else {
-          console.log("Ethereum provider not available or not fully initialized");
-          if (attempts > 1) {
-            console.log(`Retrying... (${attempts - 1} attempts left)`);
-            setTimeout(() => checkWithRetry(attempts - 1), 500);
-          } else {
-            setCorrectNetwork(false);
-          }
-        }
-      };
-
-      // Start the retry process
-      checkWithRetry();
+      // Set network to correct for Aptos wallet (no Ethereum checking)
+      setCorrectNetwork(true);
     } catch (error) {
       console.error("Error in checkNetwork:", error);
       setCorrectNetwork(false);
@@ -2172,25 +2094,10 @@ export default function GameRoulette() {
 
       checkNetwork();
 
-      // Setup event listener if provider exists
+      // No Ethereum event listeners needed for Aptos wallet
       const setupListeners = () => {
-        if (window.ethereum && typeof window.ethereum.on === 'function') {
-          window.ethereum.on("chainChanged", () => {
-            console.log("Chain changed, rechecking network");
-            checkNetwork();
-          });
-          window.ethereum.on("accountsChanged", () => {
-            console.log("Accounts changed, rechecking network");
-            checkNetwork();
-          });
-
-          return () => {
-            if (window.ethereum && typeof window.ethereum.removeListener === 'function') {
-              window.ethereum.removeListener("chainChanged", checkNetwork);
-              window.ethereum.removeListener("accountsChanged", checkNetwork);
-            }
-          };
-        }
+        // No-op for Aptos wallet
+        return () => {};
       };
 
       return setupListeners();
@@ -2198,129 +2105,9 @@ export default function GameRoulette() {
   }, [isConnected, address]); // Add dependencies to run when wallet connection changes
 
   const switchNetwork = async () => {
-    // Ensure we're running in the browser
-    if (typeof window === "undefined") return;
-
-    try {
-      // Check if wallet is connected first
-      if (!isConnected) {
-        console.log("Wallet not connected, please connect wallet first");
-        alert("Please connect your wallet first using the connect button in the top right corner");
-        return;
-      }
-
-      // Check if ethereum provider exists
-      if (!window.ethereum || typeof window.ethereum.request !== 'function') {
-        alert("No Ethereum wallet detected. Please install a wallet like MetaMask.");
-        return;
-      }
-
-      console.log("Attempting to switch to Mantle Sepolia network");
-
-      try {
-        // Try Mantle Sepolia first
-        await window.ethereum.request({
-          method: "wallet_switchEthereumChain",
-          params: [{ chainId: "0x138b" }],
-        });
-
-        console.log("Successfully switched to Mantle Sepolia");
-        // Set network to correct and reload after short delay
-        setCorrectNetwork(true);
-        setTimeout(() => window.location.reload(), 1000);
-        return;
-      } catch (switchError) {
-        console.log("Switch network error:", switchError);
-
-        // If network doesn't exist in wallet (error code 4902), try adding it
-        if (switchError.code === 4902) {
-          try {
-            console.log("Adding Mantle Sepolia to wallet");
-            await window.ethereum.request({
-              method: "wallet_addEthereumChain",
-              params: [
-                {
-                  chainId: "0x138b",
-                  chainName: "Mantle Sepolia",
-                  nativeCurrency: {
-                    name: "Mantle",
-                    symbol: "MNT",
-                    decimals: 18,
-                  },
-                  rpcUrls: ["https://rpc.sepolia.mantle.xyz"],
-                  blockExplorerUrls: ["https://sepolia.mantlescan.xyz"],
-                },
-              ],
-            });
-
-            // Try switching again after adding
-            try {
-              await window.ethereum.request({
-                method: "wallet_switchEthereumChain",
-                params: [{ chainId: "0x138b" }],
-              });
-
-              console.log("Successfully switched to Mantle Sepolia after adding");
-              // Set network to correct and reload after short delay
-              setCorrectNetwork(true);
-              setTimeout(() => window.location.reload(), 1000);
-              return;
-            } catch (error) {
-              console.error("Error switching to Mantle after adding:", error);
-            }
-          } catch (addError) {
-            console.error("Failed to add Mantle Sepolia:", addError);
-
-            // If Mantle Sepolia fails, try Pharos Devnet as fallback
-            try {
-              console.log("Adding Pharos Devnet to wallet");
-              await window.ethereum.request({
-                method: "wallet_addEthereumChain",
-                params: [
-                  {
-                    chainId: "0xc352",
-                    chainName: "Pharos Devnet",
-                    nativeCurrency: {
-                      name: "Pharos",
-                      symbol: "PHR",
-                      decimals: 18,
-                    },
-                    rpcUrls: ["https://devnet.dplabs-internal.com"],
-                    blockExplorerUrls: ["https://pharosscan.xyz"],
-                  },
-                ],
-              });
-
-              // Try switching to Pharos
-              try {
-                await window.ethereum.request({
-                  method: "wallet_switchEthereumChain",
-                  params: [{ chainId: "0xc352" }],
-                });
-
-                console.log("Successfully switched to Pharos Devnet");
-                // Set network to correct and reload after short delay
-                setCorrectNetwork(true);
-                setTimeout(() => window.location.reload(), 1000);
-                return;
-              } catch (error) {
-                console.error("Error switching to Pharos after adding:", error);
-              }
-            } catch (pharosError) {
-              console.error("Failed to add Pharos Devnet:", pharosError);
-              alert("Unable to switch to required networks. Please try adding Mantle Sepolia manually.");
-            }
-          }
-        } else {
-          // Handle other errors
-          console.error("Failed to switch network:", switchError);
-          alert("Failed to switch network. Please try again or add Mantle Sepolia manually.");
-        }
-      }
-    } catch (error) {
-      console.error("Error in switchNetwork:", error);
-      alert("An error occurred while switching networks. Please refresh and try again.");
-    }
+    // No-op for Aptos wallet - no network switching needed
+    console.log("Network switching not needed for Aptos wallet");
+    setCorrectNetwork(true);
   };
 
   // Calculate total bet
@@ -2956,7 +2743,7 @@ export default function GameRoulette() {
 
               {/* Quick Bet Buttons */}
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2 }}>
-                {[1, 5, 10, 25, 50, 100].map(amount => (
+                {[10, 50, 100, 200, 300, 500].map(amount => (
                   <Button
                     key={amount}
                     onClick={() => setBet(amount)}

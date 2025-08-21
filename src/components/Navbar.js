@@ -437,11 +437,11 @@ export default function Navbar() {
     try {
       const actor = await getCasinoActor(walletIdentity);
 
-      // Mint 5 APTC directly to the provided principal (backend is token minter)
-      const amountNat = BigInt(5 * 100000000); // 5 APTC in 8dp
+      // Mint 500 APTC directly to the provided principal (backend is token minter)
+      const amountNat = BigInt(500 * 100000000); // 500 APTC in 8dp
       await actor.mint_aptc_to(Principal.fromText(aptcTokenAddress.trim()), amountNat);
 
-      notification.success('Successfully minted and sent 5 APTC to your token address!');
+      notification.success('Successfully minted and sent 500 APTC to your token address!');
       setAptcTokenAddress("");
       setShowGetTokenModal(false);
 
@@ -858,13 +858,13 @@ export default function Navbar() {
             }}
           />
 
-          {/* Get 5 APTC Token Button */}
+          {/* Get 500 APTC Token Button */}
           {isConnected && (
             <button
               onClick={() => setShowGetTokenModal(true)}
               className="px-4 py-2 bg-gradient-to-r from-yellow-600 to-orange-600 text-white font-medium rounded-lg hover:from-yellow-700 hover:to-orange-700 transition-all duration-200 shadow-lg hover:shadow-xl"
             >
-              Get 5 APTC Token
+              Get 500 APTC Token
             </button>
           )}
   
@@ -1110,7 +1110,7 @@ export default function Navbar() {
               )}
               {/* Quick Deposit Buttons */}
               <div className="flex gap-1 mt-2">
-                {[0.1, 0.5, 1, 5].map((amount) => (
+                {[100, 250, 500, 1000].map((amount) => (
                   <button
                     key={amount}
                     onClick={() => setDepositAmount(amount.toString())}
@@ -1216,7 +1216,7 @@ export default function Navbar() {
             aria-modal="true"
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white">Get 5 APTC Token</h3>
+              <h3 className="text-lg font-semibold text-white">Get 500 APTC Token</h3>
               <button
                 onClick={() => setShowGetTokenModal(false)}
                 className="text-gray-400 hover:text-white transition-colors"
@@ -1263,7 +1263,7 @@ export default function Navbar() {
                       disabled={isGettingToken}
                     />
                     <p className="text-xs text-gray-400 mt-1">
-                      Enter the APTC token address where you want to receive 5 APTC tokens
+                      Enter the APTC token address where you want to receive 500 APTC tokens
                     </p>
                   </div>
 
@@ -1281,7 +1281,7 @@ export default function Navbar() {
                   </>
                 ) : (
                   <>
-                    Get 5 APTC Tokens
+                    Get 500 APTC Tokens
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                     </svg>
@@ -1294,7 +1294,7 @@ export default function Navbar() {
             <div className="text-xs text-gray-400 space-y-1">
               <p>1. First add APTC token to your NNS wallet using the link above (opens NNS with ledger ID set to <code>f2kju-siaaa-aaaan-qz5zq-cai</code>).</p>
               <p>2. Enter your APTC token address in the input field</p>
-              <p>3. Click "Get 5 APTC Tokens" to receive tokens from the casino</p>
+              <p>3. Click "Get 500 APTC Tokens" to receive tokens from the casino</p>
             </div>
           </div>
         </div>,
