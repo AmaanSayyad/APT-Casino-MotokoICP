@@ -210,31 +210,14 @@ export default function Navbar() {
     dispatch(setLoading(false));
   };
 
-  // Handle withdraw from house account
+  // Handle withdraw from house account - Simplified without identity check
   const handleWithdraw = async () => {
-    if (!isConnected) {
-      notification.error('Please connect your wallet first');
-      return;
-    }
-
     try {
       setIsWithdrawing(true);
-      // Determine current balance in APTC (decimal format)
-      const currentBalance = parseFloat(userBalance || '0') / 100000000;
-      if (currentBalance <= 0) {
-        notification.error('No balance to withdraw');
-        return;
-      }
       
       // Validate withdraw amount
       if (!withdrawAmount || parseFloat(withdrawAmount) <= 0) {
         notification.error('Please enter a valid withdraw amount');
-        return;
-      }
-      
-      const requestedAmount = parseFloat(withdrawAmount);
-      if (requestedAmount > currentBalance) {
-        notification.error('Withdraw amount exceeds available balance');
         return;
       }
       
@@ -243,14 +226,18 @@ export default function Navbar() {
         notification.error('Please enter recipient APTC token address');
         return;
       }
+      
       try {
         Principal.fromText(withdrawAddress.trim());
       } catch (e) {
         notification.error('Invalid APTC token address format');
         return;
       }
-      const actor = await getCasinoActor(walletIdentity);
-      // If user typed an amount, withdraw that exact amount; else withdraw all
+
+      // Get actor (identity optional)
+      const actor = await getCasinoActor();
+      
+      // Convert amount to octas
       const decimalToOctasNat = (text) => {
         const s = String(text).trim();
         if (!s) return 0n;
@@ -269,12 +256,15 @@ export default function Navbar() {
       };
 
       const requestedOctas = decimalToOctasNat(withdrawAmount);
+      const requestedAmount = parseFloat(withdrawAmount);
+      
       if (requestedOctas > 0n) {
         // Exact amount withdraw
         await actor.withdraw_to(Principal.fromText(withdrawAddress.trim()), requestedOctas);
         
-        // Update balance by subtracting the withdrawn amount (convert back to octas)
-        const newBalanceInAPTC = currentBalance - requestedAmount;
+        // Update balance by subtracting the withdrawn amount
+        const currentBalance = parseFloat(userBalance || '0') / 100000000;
+        const newBalanceInAPTC = Math.max(0, currentBalance - requestedAmount);
         const newBalanceInOctas = Math.round(newBalanceInAPTC * 100000000);
         dispatch(setBalance(String(newBalanceInOctas)));
         
@@ -297,19 +287,23 @@ export default function Navbar() {
       setShowBalanceModal(false);
     } catch (error) {
       console.error('Withdraw error:', error);
-      notification.error(`Withdrawal failed: ${error.message}`);
+      
+      // Check if it's a timeout or connection error
+      if (error.message?.includes('timeout') || 
+          error.message?.includes('network') || 
+          error.message?.includes('fetch') ||
+          error.message?.includes('HTTP')) {
+        notification.error('Connection timeout. Please reconnect your Internet Identity and try again.');
+      } else {
+        notification.error(`Withdrawal failed: ${error.message}`);
+      }
     } finally {
       setIsWithdrawing(false);
     }
   };
 
-  // Handle deposit - redirect to NNS with transfer details
+  // Handle deposit - Simplified without identity check
   const handleDeposit = async () => {
-    if (!isConnected) {
-      notification.error('Please connect your wallet first');
-      return;
-    }
-
     if (!depositAddress.trim()) {
       notification.error('Please enter your APTC wallet address');
       return;
@@ -331,7 +325,8 @@ export default function Navbar() {
 
     setIsDepositing(true);
     try {
-      const actor = await getCasinoActor(walletIdentity);
+      // Get actor (identity optional)
+      const actor = await getCasinoActor();
       // Convert decimal text to octas (8 dp) without rounding
       const decimalToOctasNat = (text) => {
         const s = String(text).trim();
@@ -368,7 +363,6 @@ export default function Navbar() {
       // Store nonce for later verification
       localStorage.setItem('pendingDepositNonce', nonce.toString());
       localStorage.setItem('pendingDepositAmount', amountNat.toString());
-      localStorage.setItem('pendingDepositUserPrincipal', walletIdentity.getPrincipal().toText());
       localStorage.setItem('pendingDepositCasinoPrincipal', casinoPrincipalText);
       
       // Create NNS transfer URL with pre-filled details
@@ -387,20 +381,24 @@ export default function Navbar() {
       
     } catch (error) {
       console.error('Deposit request error:', error);
-      const msg = (error && (error.message || (typeof error === 'string' ? error : 'Unknown error'))) || 'Unknown error';
-      notification.error(`Deposit request failed: ${msg}`);
+      
+      // Check if it's a timeout or connection error
+      if (error.message?.includes('timeout') || 
+          error.message?.includes('network') || 
+          error.message?.includes('fetch') ||
+          error.message?.includes('HTTP')) {
+        notification.error('Connection timeout. Please reconnect your Internet Identity and try again.');
+      } else {
+        const msg = (error && (error.message || (typeof error === 'string' ? error : 'Unknown error'))) || 'Unknown error';
+        notification.error(`Deposit request failed: ${msg}`);
+      }
     } finally {
       setIsDepositing(false);
     }
   };
 
-  // Handle deposit completion check
+  // Handle deposit completion check - Simplified without identity check
   const handleCheckDepositCompletion = async () => {
-    if (!isConnected) {
-      notification.error('Please connect your wallet first');
-      return;
-    }
-
     const nonce = localStorage.getItem('pendingDepositNonce');
     if (!nonce) {
       notification.error('No pending deposit found');
@@ -408,7 +406,8 @@ export default function Navbar() {
     }
 
     try {
-      const actor = await getCasinoActor(walletIdentity);
+      // Get actor (identity optional)
+      const actor = await getCasinoActor();
       const [success, newBalance] = await actor.check_deposit_completion(BigInt(nonce));
       
       if (success) {
@@ -438,18 +437,22 @@ export default function Navbar() {
       
     } catch (error) {
       console.error('Deposit completion check error:', error);
-      const msg = (error && (error.message || (typeof error === 'string' ? error : 'Unknown error'))) || 'Unknown error';
-      notification.error(`Deposit completion check failed: ${msg}`);
+      
+      // Check if it's a timeout or connection error
+      if (error.message?.includes('timeout') || 
+          error.message?.includes('network') || 
+          error.message?.includes('fetch') ||
+          error.message?.includes('HTTP')) {
+        notification.error('Connection timeout. Please reconnect your Internet Identity and try again.');
+      } else {
+        const msg = (error && (error.message || (typeof error === 'string' ? error : 'Unknown error'))) || 'Unknown error';
+        notification.error(`Deposit completion check failed: ${msg}`);
+      }
     }
   };
 
-  // Handle APTC token sending
+  // Handle APTC token sending - Simplified without identity check
   const handleGetAPTC = async () => {
-    if (!isConnected) {
-      notification.error('Please connect your wallet first');
-      return;
-    }
-
     if (!aptcTokenAddress.trim()) {
       notification.error('Please enter your APTC token address');
       return;
@@ -465,7 +468,8 @@ export default function Navbar() {
 
     setIsGettingToken(true);
     try {
-      const actor = await getCasinoActor(walletIdentity);
+      // Get actor (identity optional)
+      const actor = await getCasinoActor();
 
       // Mint 500 APTC directly to the provided principal (backend is token minter)
       const amountNat = BigInt(500 * 100000000); // 500 APTC in 8dp
@@ -477,8 +481,17 @@ export default function Navbar() {
 
     } catch (error) {
       console.error('APTC sending error:', error);
-      const msg = (error && (error.message || (typeof error === 'string' ? error : 'Unknown error'))) || 'Unknown error';
-      notification.error(`Failed to send APTC: ${msg}`);
+      
+      // Check if it's a timeout or connection error
+      if (error.message?.includes('timeout') || 
+          error.message?.includes('network') || 
+          error.message?.includes('fetch') ||
+          error.message?.includes('HTTP')) {
+        notification.error('Connection timeout. Please reconnect your Internet Identity and try again.');
+      } else {
+        const msg = (error && (error.message || (typeof error === 'string' ? error : 'Unknown error'))) || 'Unknown error';
+        notification.error(`Failed to send APTC: ${msg}`);
+      }
     } finally {
       setIsGettingToken(false);
     }
@@ -1072,7 +1085,7 @@ export default function Navbar() {
                 />
                 <button
                   onClick={handleDeposit}
-                  disabled={!isConnected || !depositAmount || !depositAddress.trim() || parseFloat(depositAmount) <= 0 || isDepositing}
+                  disabled={!depositAmount || !depositAddress.trim() || parseFloat(depositAmount) <= 0 || isDepositing}
                   className="px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white rounded font-medium transition-colors flex items-center gap-2"
                 >
                   {isDepositing ? (
@@ -1162,7 +1175,7 @@ export default function Navbar() {
               <div className="mt-4">
                 <button
                   onClick={handleCheckDepositCompletion}
-                  disabled={!isConnected || !localStorage.getItem('pendingDepositNonce')}
+                  disabled={!localStorage.getItem('pendingDepositNonce')}
                   className="w-full px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white rounded font-medium transition-colors flex items-center justify-center gap-2"
                 >
                   Check Deposit Completion
@@ -1230,7 +1243,7 @@ export default function Navbar() {
               
               <button
                 onClick={handleWithdraw}
-                disabled={!isConnected || parseFloat(userBalance || '0') <= 0 || isWithdrawing || !withdrawAddress.trim() || !withdrawAmount || parseFloat(withdrawAmount) <= 0 || parseFloat(withdrawAmount) > (parseFloat(userBalance || '0') / 100000000)}
+                disabled={parseFloat(userBalance || '0') <= 0 || isWithdrawing || !withdrawAddress.trim() || !withdrawAmount || parseFloat(withdrawAmount) <= 0 || parseFloat(withdrawAmount) > (parseFloat(userBalance || '0') / 100000000)}
                 className="w-full px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white rounded font-medium transition-colors flex items-center justify-center gap-2"
               >
                 {isWithdrawing ? (
@@ -1346,7 +1359,7 @@ export default function Navbar() {
             <div className="mb-4">
               <button
                 onClick={handleGetAPTC}
-                disabled={!isConnected || !aptcTokenAddress.trim() || isGettingToken}
+                disabled={!aptcTokenAddress.trim() || isGettingToken}
                 className="w-full px-4 py-2 bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white rounded font-medium transition-colors flex items-center justify-center gap-2"
               >
                 {isGettingToken ? (

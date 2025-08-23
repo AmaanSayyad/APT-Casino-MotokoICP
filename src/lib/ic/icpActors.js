@@ -6,23 +6,22 @@ import { CASINO_CANISTER_ID, IC_HOST } from '@/config/ic';
 const actorCache = new Map(); // key: `${canisterId}@${host||''}` -> actor
 
 /**
- * Create an ICP actor using Internet Identity
+ * Create an ICP actor - Simplified without identity requirement
  * @param {Object} params - Parameters for actor creation
  * @param {string} params.canisterId - The canister ID
  * @param {Object} params.idlFactory - The IDL factory
  * @param {string} params.host - The IC host URL
- * @param {Object} params.identity - The user identity
+ * @param {Object} params.identity - The user identity (optional)
  * @returns {Promise<ActorSubclass>} The created actor
  */
 export const createICPActor = async ({ 
   canisterId, 
   idlFactory, 
   host = IC_HOST, 
-  identity 
+  identity = null 
 }) => {
   if (!canisterId) throw new Error('Missing canisterId');
   if (!idlFactory) throw new Error('Missing idlFactory');
-  if (!identity) throw new Error('Missing identity - user must be connected');
 
   const normalizedHost = host ? host.replace('localhost', '127.0.0.1') : undefined;
   const key = `${canisterId}@${normalizedHost || ''}`;
@@ -33,8 +32,14 @@ export const createICPActor = async ({
   }
 
   try {
-    // Create HTTP agent with the user's identity
-    const agent = new HttpAgent({ identity, host: normalizedHost });
+    // Create HTTP agent - with or without identity
+    const agentOptions = { host: normalizedHost };
+    if (identity) {
+      agentOptions.identity = identity;
+    }
+    
+    const agent = new HttpAgent(agentOptions);
+    
     // Fetch root key only when using local replica
     if (normalizedHost && (normalizedHost.includes('127.0.0.1') || normalizedHost.includes('localhost'))) {
       await agent.fetchRootKey();
@@ -52,18 +57,26 @@ export const createICPActor = async ({
     return actor;
   } catch (error) {
     console.error('Failed to create ICP actor:', error);
-    throw new Error(`Failed to create actor: ${error.message}`);
+    
+    // Check if it's a timeout or connection error
+    if (error.message?.includes('timeout') || 
+        error.message?.includes('network') || 
+        error.message?.includes('fetch') ||
+        error.message?.includes('HTTP')) {
+      throw new Error('Connection timeout. Please reconnect your Internet Identity and try again.');
+    } else {
+      throw new Error(`Failed to create actor: ${error.message}`);
+    }
   }
 };
 
 /**
- * Get the casino actor using the current user's identity
- * @param {Object} identity - The user's identity from ICP wallet
+ * Get the casino actor - Simplified without identity requirement
+ * @param {Object} identity - The user's identity from ICP wallet (optional)
  * @returns {Promise<ActorSubclass>} The casino actor
  */
-export const getCasinoActor = async (identity) => {
+export const getCasinoActor = async (identity = null) => {
   if (!CASINO_CANISTER_ID) throw new Error('CASINO_CANISTER_ID is not set');
-  if (!identity) throw new Error('User must be connected to access casino');
   
   const { idlFactory } = await import('@/ic/casino_backend/casino_backend.idl');
   
