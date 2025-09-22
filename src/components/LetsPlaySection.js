@@ -61,9 +61,8 @@ export default function LetsPlaySection() {
             ))}
           </div>
           
-          {/* Action buttons with improved layout */}
-          <div className="flex flex-col sm:flex-row gap-4 sm:gap-8 mt-4">
-            <AptosConnectWalletButton />
+          {/* Centered single action button */}
+          <div className="flex justify-center mt-4">
             <LaunchGameButton />
           </div>
           

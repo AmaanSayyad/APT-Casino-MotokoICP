@@ -24,19 +24,19 @@ const HowItWorksSection = () => {
     {
       id: 1,
       title: 'Connect Your Wallet',
-      description: 'Link your Web3 wallet in seconds to unlock the full APT Casino experience. We support MetaMask, WalletConnect, and all major Web3 wallets.',
+      description: 'Link your Web3 wallet in seconds to unlock the full APT Casino experience. We support NNS and all major Web3 wallets.',
       emoji: '👛'
     },
     {
       id: 2,
       title: 'Get APTC Tokens',
-      description: 'Power your gameplay with APTC tokens – our exclusive in-game currency built on ICP Network. Easily swap from any token or other cryptocurrencies.',
+      description: 'Power your gameplay with APTC tokens – our exclusive in-game currency built on top of the ICP Network. Easily swap from any token or other cryptocurrencies.',
       emoji: '💰'
     },
     {
       id: 3,
       title: 'Start Playing',
-      description: 'Dive into our expanding library of provably fair games including Roulette, Blackjack, and Poker. Every game provides real-time stats and detailed history.',
+      description: 'Dive into our expanding library of provably fair games including Roulette, Mines, Plinko, and Spin Wheel. Every game provides real-time stats and detailed history.',
       emoji: '🎮'
     },
     {
