@@ -23,54 +23,41 @@ const FEATURED_GAMES = [
     isHot: true,
   },
   {
-    id: 'fortune-tiger',
-    title: 'Fortune Tiger',
-    description: 'Win big with the lucky tiger slots',
-    image: '/images/games/fortune-tiger.png',
-    path: '/game/fortune-tiger',
-    players: 89,
-    categories: ['slots', 'jackpot'],
-    badge: 'JACKPOT',
-    badgeColor: 'from-blue-500 to-purple-500',
+    id: 'mines',
+    title: 'Mines',
+    description: 'Navigate through the minefield and collect gems',
+    image: '/images/games/mines.png',
+    path: '/game/mines',
+    players: 156,
+    categories: ['featured', 'instant'],
+    badge: 'HOT',
+    badgeColor: 'from-green-500 to-emerald-500',
     isNew: false,
-    isHot: false,
+    isHot: true,
   },
   {
-    id: 'poker',
-    title: 'Texas Hold\'em',
-    description: 'Show your poker face and win big',
-    image: '/images/games/poker.png',
-    path: '/game/poker',
-    players: 56,
-    categories: ['card', 'table'],
-    badge: 'NEW',
-    badgeColor: 'from-green-500 to-teal-500',
-    isNew: true,
-    isHot: false,
-  },
-  {
-    id: 'blackjack',
-    title: 'Blackjack',
-    description: 'Beat the dealer to 21 and win',
-    image: '/images/games/blackjack.png',
-    path: '/game/blackjack',
-    players: 78,
-    categories: ['card', 'table', 'featured'],
+    id: 'wheel',
+    title: 'Spin Wheel',
+    description: 'Spin the wheel of fortune for amazing prizes',
+    image: '/images/games/spin_the_wheel.png',
+    path: '/game/wheel',
+    players: 98,
+    categories: ['featured', 'instant'],
     badge: 'FEATURED',
     badgeColor: 'from-purple-500 to-pink-500',
     isNew: false,
     isHot: true,
   },
   {
-    id: 'crash',
-    title: 'Crypto Crash',
-    description: 'Cash out before the crash for huge wins',
-    image: '/images/games/crash.png',
-    path: '/game/crash',
-    players: 203,
-    categories: ['instant', 'featured'],
-    badge: 'HOT',
-    badgeColor: 'from-red-500 to-yellow-500',
+    id: 'plinko',
+    title: 'Plinko',
+    description: 'Drop the ball and watch it bounce to big wins',
+    image: '/images/games/plinko.png',
+    path: '/game/plinko',
+    players: 134,
+    categories: ['featured', 'instant'],
+    badge: 'POPULAR',
+    badgeColor: 'from-blue-500 to-cyan-500',
     isNew: false,
     isHot: true,
   }
@@ -81,8 +68,6 @@ const CATEGORIES = [
   { id: 'all', label: 'All Games' },
   { id: 'featured', label: 'Featured' },
   { id: 'table', label: 'Table Games' },
-  { id: 'card', label: 'Card Games' },
-  { id: 'slots', label: 'Slots' },
   { id: 'instant', label: 'Instant Win' },
 ];
 
@@ -174,9 +159,18 @@ const GameCarousel = () => {
           )}
           
           <div className="space-y-3 mt-3">
-            <h3 className="text-2xl md:text-3xl font-display font-bold text-white group-hover:text-gradient transition-all">
-              {game.title}
-            </h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-2xl md:text-3xl font-display font-bold text-white group-hover:text-gradient transition-all">
+                {game.title}
+              </h3>
+              {/* Live indicator for specific games */}
+              {(game.id === 'roulette' || game.id === 'plinko' || game.id === 'mines' || game.id === 'wheel') && (
+                <div className="flex items-center gap-1 bg-green-900/30 border border-green-500/30 px-2 py-0.5 rounded-full">
+                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                  <span className="text-green-400 text-xs font-medium">LIVE</span>
+                </div>
+              )}
+            </div>
             <p className="text-xs md:text-sm text-white/80">{game.description}</p>
             
             {/* Live player count */}
@@ -324,7 +318,7 @@ const GameCarousel = () => {
       
       {/* View all games button */}
       <div className="text-center mt-10">
-        <Link href="/games">
+        <Link href="/game">
           <GradientBorderButton className="px-8">
             View All Games
           </GradientBorderButton>

@@ -12,20 +12,11 @@ const WheelHistory = ({ gameHistory = [] }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
 
-   // Open Arbiscan link for transaction hash
-   const openArbiscan = (hash) => {
+  // Open Etherscan link for transaction hash
+  const openEtherscan = (hash) => {
     if (hash && hash !== 'unknown') {
-      const network = process.env.NEXT_PUBLIC_NETWORK || 'arbitrum-sepolia';
-      let explorerUrl;
-      
-      if (network === 'arbitrum-sepolia') {
-        explorerUrl = `https://sepolia.arbiscan.io/tx/${hash}`;
-      } else if (network === 'arbitrum-one') {
-        explorerUrl = `https://arbiscan.io/tx/${hash}`;
-      } else {
-        explorerUrl = `https://sepolia.etherscan.io/tx/${hash}`;
-      }
-      
+      const network = process.env.NEXT_PUBLIC_NETWORK || 'sepolia';
+      const explorerUrl = `https://${network}.etherscan.io/tx/${hash}`;
       window.open(explorerUrl, '_blank');
     }
   };
@@ -57,7 +48,7 @@ const WheelHistory = ({ gameHistory = [] }) => {
   
   const paginatedHistory = filteredHistory.slice((page - 1) * entriesShown, page * entriesShown);
   const totalPages = Math.ceil(filteredHistory.length / entriesShown);
-  
+
   return (
     <Paper
       elevation={5}
@@ -108,7 +99,7 @@ const WheelHistory = ({ gameHistory = [] }) => {
         color="rgba(255,255,255,0.7)"
         sx={{ mb: 3 }}
       >
-        Recent game results and statistics
+        View recent game results and player statistics for Fortune Wheel
       </Typography>
 
       <Box sx={{ 
@@ -283,9 +274,9 @@ const WheelHistory = ({ gameHistory = [] }) => {
           flexWrap: { xs: 'wrap', md: 'nowrap' }
         }}>
           <TextField
-                    placeholder="Search history..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search history..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             size="small"
             InputProps={{
               startAdornment: (
@@ -328,8 +319,8 @@ const WheelHistory = ({ gameHistory = [] }) => {
             }}
           >
             <Select
-                  value={entriesShown}
-                  onChange={(e) => setEntriesShown(Number(e.target.value))}
+              value={entriesShown}
+              onChange={(e) => setEntriesShown(Number(e.target.value))}
               sx={{
                 color: 'white',
                 backgroundColor: 'rgba(0,0,0,0.2)',
@@ -364,7 +355,7 @@ const WheelHistory = ({ gameHistory = [] }) => {
               minWidth: { xs: '100%', md: 'auto' },
             }}
           >
-                  Export
+            Export
           </Button>
         </Box>
       </Box>
@@ -522,7 +513,7 @@ const WheelHistory = ({ gameHistory = [] }) => {
                           whiteSpace: 'nowrap'
                         }}
                       >
-                            {item.betAmount} ETH
+                        {item.betAmount} ETH
                       </Typography>
                       <Image src={coin} width={16} height={16} alt="coin" />
                     </Box>
@@ -553,7 +544,7 @@ const WheelHistory = ({ gameHistory = [] }) => {
                           whiteSpace: 'nowrap'
                         }}
                       >
-                            {item.payout} ETH
+                        {item.payout} ETH
                       </Typography>
                       <Image src={coin} width={16} height={16} alt="coin" />
                     </Box>
@@ -565,22 +556,22 @@ const WheelHistory = ({ gameHistory = [] }) => {
                       borderBottom: '1px solid rgba(104, 29, 219, 0.1)'
                     }}
                   >
-                        {item.payout > 0 ? `+${item.payout}` : '0'}
+                    {item.payout > 0 ? `+${item.payout}` : '0'}
                   </TableCell>
                   <TableCell 
                     sx={{ 
                       borderBottom: '1px solid rgba(104, 29, 219, 0.1)'
                     }}
                   >
-                        {item.vrfProof ? (
+                    {item.vrfProof ? (
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           <Chip 
                             icon={<FaCheck size={10} />}
                             label={item.vrfProof.requestId ? 
-                                  `${item.vrfProof.requestId.slice(0, 6)}...${item.vrfProof.requestId.slice(-4)}` : 
-                                  'N/A'
-                                }
+                              `${item.vrfProof.requestId.slice(0, 6)}...${item.vrfProof.requestId.slice(-4)}` : 
+                              'N/A'
+                            }
                             size="small"
                             sx={{ 
                               backgroundColor: 'rgba(20, 216, 84, 0.1)',
@@ -595,7 +586,7 @@ const WheelHistory = ({ gameHistory = [] }) => {
                             }}
                           />
                           <Button
-                                onClick={() => openEtherscan(item.vrfProof.transactionHash)}
+                            onClick={() => openEtherscan(item.vrfProof.transactionHash)}
                             size="small"
                             startIcon={<FaExternalLinkAlt size={10} />}
                             sx={{ 
@@ -613,7 +604,7 @@ const WheelHistory = ({ gameHistory = [] }) => {
                           </Button>
                         </Box>
                         <Typography variant="caption" color="rgba(255,255,255,0.5)">
-                              Log: #{item.vrfProof.logIndex || 0}
+                          Log: #{item.vrfProof.logIndex || 0}
                         </Typography>
                       </Box>
                     ) : (
@@ -628,8 +619,8 @@ const WheelHistory = ({ gameHistory = [] }) => {
           </TableBody>
         </Table>
       </TableContainer>
-            
-            {filteredHistory.length === 0 && (
+      
+      {filteredHistory.length === 0 && (
         <Box 
           sx={{ 
             py: 4, 
@@ -641,7 +632,7 @@ const WheelHistory = ({ gameHistory = [] }) => {
           }}
         >
           <Typography color="rgba(255,255,255,0.5)">
-            No results found. Try different filters.
+            No matching results found. Try adjusting your search or filter.
           </Typography>
         </Box>
       )}
@@ -654,7 +645,7 @@ const WheelHistory = ({ gameHistory = [] }) => {
         gap: 2
       }}>
         <Typography variant="body2" color="rgba(255,255,255,0.5)">
-                Showing {Math.min(entriesShown, filteredHistory.length)} of {filteredHistory.length} results
+          Showing {Math.min(entriesShown, filteredHistory.length)} of {filteredHistory.length} results
         </Typography>
         
         {totalPages > 1 && (
@@ -687,4 +678,4 @@ const WheelHistory = ({ gameHistory = [] }) => {
   );
 };
 
-export default WheelHistory; 
+export default WheelHistory;

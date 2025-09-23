@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "../../lib/utils";
 import Image from "next/image";
 import coin from "../../../public/coin.png";
+import useWalletStatus from '@/hooks/useWalletStatus';
+import { Shield } from "lucide-react";
+import vrfProofService from '@/services/VRFProofService';
 // import { wheelDataByRisk } from "./GameWheel"; // Make sure this is exported
 
 const BettingPanel = ({
@@ -21,7 +24,9 @@ const BettingPanel = ({
   isSpinning
 }) => {
   
+  const { isConnected } = useWalletStatus();
   const [inputValue, setInputValue] = useState('0');
+  const [vrfProofCount, setVrfProofCount] = useState(0);
 
   const handleInputChange = (e) => {
     const value = e.target.value;
@@ -41,9 +46,97 @@ const BettingPanel = ({
   const [stopProfit, setStopProfit] = useState(0);
   const [stopLoss, setStopLoss] = useState(0);
 
+  // Update VRF proof count every 5 seconds
+  useEffect(() => {
+    const updateVrfProofCount = () => {
+      try {
+        const proofStats = vrfProofService.getProofStats();
+        setVrfProofCount(proofStats.availableVRFs.WHEEL || 0);
+      } catch (error) {
+        console.error('Error updating VRF proof count:', error);
+        setVrfProofCount(0);
+      }
+    };
+
+    // Update immediately
+    updateVrfProofCount();
+
+    // Update every 5 seconds
+    const interval = setInterval(updateVrfProofCount, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="bg-[#290023] border border-[#333947] rounded-3xl p-4 flex flex-col h-full">
+      {/* Balance Display */}
+      <div className="mb-4 p-3 bg-gradient-to-r from-green-900/20 to-green-800/10 rounded-lg border border-green-800/30">
+        <div className="flex justify-between items-center">
+          <span className="text-sm text-gray-300">Balance:</span>
+          {isConnected ? (
+            <span className="text-sm text-green-300 font-medium">
+              {balance.toFixed(5)} ETH
+            </span>
+          ) : (
+            <span className="text-sm text-red-300 font-medium">
+              Connect Wallet
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* VRF Proof Status */}
+      <div className="mb-4 p-3 bg-gradient-to-r from-purple-900/20 to-pink-900/20 rounded-lg border border-purple-800/30">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <Shield size={16} className="text-purple-300" />
+            <span className="text-sm font-medium text-purple-300">VRF Proofs</span>
+          </div>
+          {isConnected && vrfProofCount <= 0 && (
+            <div className="w-2 h-2 bg-red-400 rounded-full"></div>
+          )}
+        </div>
+        
+        {!isConnected ? (
+          <div className="text-center py-2">
+            <div className="text-sm text-gray-400 mb-2">Connect wallet to view VRF proofs</div>
+            <button
+              onClick={() => {
+                // Trigger wallet connection
+                if (window.ethereum) {
+                  window.ethereum.request({ method: 'eth_requestAccounts' });
+                }
+              }}
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
+            >
+              Connect Wallet
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center justify-between">
+              <span className={`text-lg font-bold ${
+                vrfProofCount > 0 ? 'text-green-400' : 'text-red-400'
+              }`}>
+                {vrfProofCount} available
+              </span>
+              
+              {vrfProofCount <= 0 && (
+                <span className="text-xs text-red-400 bg-red-900/20 px-2 py-1 rounded">
+                  Generate proofs first!
+                </span>
+              )}
+            </div>
+            
+            {vrfProofCount > 0 && (
+              <div className="mt-2 text-xs text-purple-300">
+                Each game consumes 1 VRF proof
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
       {/* Mode Tabs */}
       <div className="flex mb-4 bg-[#120521] border border-[#333947] rounded-3xl p-2 gap-2 overflow-hidden">
         <div className={cn("w-1/2", gameMode === "manual" && "gradient-borderb")}>
@@ -75,7 +168,7 @@ const BettingPanel = ({
       <div className="mb-4">
         <div className="flex justify-between p-1 mb-1">
           <label className="text-sm text-white">Bet Amount</label>
-          <div className="text-sm">${betAmount.toFixed(2)}</div>
+          <div className="text-sm">{betAmount.toFixed(5)} ETH</div>
         </div>
         <div className="flex w-full gradient-border">
         <div className="flex items-center w-[60%]">
@@ -85,7 +178,9 @@ const BettingPanel = ({
               value={inputValue}
               onChange={handleInputChange}
               className="bg-transparent border-none outline-none w-full text-white p-1"
-              placeholder="0.00000000000"
+              placeholder="0.00100"
+              step="0.001"
+              min="0.001"
             />
             <Image
                   src={coin}
@@ -248,14 +343,16 @@ const BettingPanel = ({
             manulBet();
           }
         }}
-        disabled={isSpinning || betAmount <= 0 || betAmount > balance}
-        className={`py-3 mt-4 rounded-lg text-center font-semibold transition-all w-full ${
-          isSpinning || betAmount <= 0 || betAmount > balance
-            ? "bg-gray-700 text-gray-500 cursor-not-allowed"
-            : "bg-gradient-to-r from-[#F1324D] to-[#2414E3] text-white hover:from-[#e82f49] hover:to-[#2112e1]"
+        disabled={isSpinning || betAmount <= 0 || betAmount > balance || balance <= 0}
+        className={`py-3 mt-4 rounded-lg text-center font-semibold transition-all w-full border-2 ${
+          isSpinning || betAmount <= 0 || betAmount > balance || balance <= 0
+            ? "bg-gray-700 text-gray-500 cursor-not-allowed border-gray-500"
+            : "bg-gradient-to-r from-[#F1324E3] to-[#2414E3] text-white hover:from-[#e82f49] hover:to-[#2112e1] border-white shadow-lg hover:border-yellow-300 hover:shadow-yellow-300/25"
         }`}
       >
-        {gameMode === "auto" ? "Start Autobet" : "Start Bet"}
+        <span className="font-bold text-lg">
+          {gameMode === "auto" ? "Start Autobet" : "Start Bet"}
+        </span>
       </button>
 
     </div>
