@@ -13,7 +13,6 @@ import {
 } from '@mui/material';
 import { ExternalLink, Copy, CheckCircle } from 'lucide-react';
 import { ExpandMore, ExpandLess } from '@mui/icons-material';
-import vrfProofService from '../../services/VRFProofService';
 
 const GameHistoryCard = ({ game, gameType }) => {
   const [expanded, setExpanded] = useState(false);
