@@ -15,6 +15,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { setBalance, setLoading, loadBalanceFromStorage } from '@/store/balanceSlice';
 import { useNotification } from '@/components/NotificationSystem';
 
+
 // Import new components
 import WheelVideo from "./components/WheelVideo";
 import WheelDescription from "./components/WheelDescription";
@@ -54,12 +55,12 @@ export default function Home() {
     if (isInitialized.current) return; // Prevent multiple executions
     
     const savedBalance = loadBalanceFromStorage();
-    if (savedBalance && savedBalance !== "0") {
+    if (savedBalance) {
       console.log('Loading saved balance from localStorage:', savedBalance);
       dispatch(setBalance(savedBalance));
     } else {
-      // Set initial balance to 0 if no saved balance
-      console.log('No saved balance, setting to 0');
+      // Initialize with zero balance
+      console.log('No saved balance, initializing with zero');
       dispatch(setBalance("0"));
     }
     
@@ -78,14 +79,11 @@ export default function Home() {
   const manulBet = async () => {
     if (betAmount <= 0 || isSpinning) return;
 
-    // Check if wallet is connected first
-    if (!window.aptos || !window.aptos.account) {
-      alert('Please connect your Aptos wallet first');
-      return;
-    }
+    
 
-    // Check Redux balance
+   
     const currentBalance = parseFloat(userBalance || '0') / 100000000; // Convert from octas to APT
+
     
     if (currentBalance < betAmount) {
       alert(`Insufficient balance. You have ${currentBalance.toFixed(8)} APT but need ${betAmount} APT`);
@@ -97,8 +95,8 @@ export default function Home() {
       setHasSpun(false);
 
       console.log('=== STARTING WHEEL BET WITH REDUX BALANCE ===');
-      console.log('Bet amount (APT):', betAmount);
-      console.log('Current balance (APT):', currentBalance);
+      console.log('Bet amount (APTC):', betAmount);
+      console.log('Current balance (APTC):', currentBalance);
       console.log('Sectors:', noOfSegments);
       
       // Deduct bet amount from Redux balance
@@ -143,12 +141,15 @@ export default function Home() {
             id: Date.now(),
             game: 'Wheel',
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            betAmount: betAmount,
+            betAmount: betAmount.toFixed(5),
             multiplier: `${actualMultiplier.toFixed(2)}x`,
-            payout: winAmount,
+            payout: winAmount.toFixed(5),
             result: 0,
             color: detectedColor
           };
+
+         
+
           setGameHistory(prev => [newHistoryItem, ...prev]);
           
           setIsSpinning(false);
@@ -156,7 +157,7 @@ export default function Home() {
           
           // Show result and update balance
           if (actualMultiplier > 0) {
-            notification.success(`Congratulations! ${betAmount} APT × ${actualMultiplier.toFixed(2)} = ${winAmount.toFixed(8)} APT won!`);
+            notification.success(`Congratulations! ${betAmount} APTC × ${actualMultiplier.toFixed(2)} = ${winAmount.toFixed(8)} APTC won!`);
             
             // Update balance with winnings
             const currentBalanceOctas = parseFloat(userBalance || '0');
@@ -200,10 +201,12 @@ export default function Home() {
     noOfSegments,
   }) => {
     // Check if wallet is connected first
-    if (!window.aptos || !window.aptos.account) {
-      alert('Please connect your Aptos wallet first');
+    if (!isConnected) {
+      alert('Please connect your Ethereum wallet first to play Wheel!');
       return;
     }
+    
+   
     
     if (isSpinning) return; // Prevent overlapping spins
 
@@ -213,9 +216,10 @@ export default function Home() {
     for (let i = 0; i < numberOfBets; i++) {
       // Check Redux balance before each bet
       const currentBalance = parseFloat(userBalance || '0') / 100000000; // Convert from octas to APT
+
       
       if (currentBalance < currentBet) {
-        alert(`Insufficient balance for bet ${i + 1}. Need ${currentBet} APT but have ${currentBalance.toFixed(8)} APT`);
+        alert(`Insufficient balance for bet ${i + 1}. Need ${currentBet} APTC but have ${currentBalance.toFixed(8)} APTC`);
         break;
       }
 
@@ -226,6 +230,7 @@ export default function Home() {
       const betAmountInOctas = currentBet * 100000000; // Convert to octas
       const newBalance = (parseFloat(userBalance || '0') - betAmountInOctas).toString();
       dispatch(setBalance(newBalance));
+
 
       // Calculate result position
       const resultPosition = Math.floor(Math.random() * noOfSegments);
@@ -304,6 +309,13 @@ export default function Home() {
         const currentBalance = parseFloat(userBalance || '0') / 100000000; // Convert from octas to APT
         const newBalanceWithWin = currentBalance + winAmount;
         const newBalanceWithWinOctas = Math.floor(newBalanceWithWin * 100000000); // Convert back to octas
+        
+        console.log('💰 Auto bet winnings:', {
+          currentBalance: currentBalance.toFixed(5),
+          winAmount: winAmount.toFixed(5),
+          newBalance: newBalanceWithWin.toFixed(5)
+        });
+        
         dispatch(setBalance(newBalanceWithWinOctas.toString()));
       }
 
@@ -313,7 +325,7 @@ export default function Home() {
       
       // Show notification for win
       if (actualMultiplier > 0) {
-        notification.success(`Congratulations! ${currentBet} APT × ${actualMultiplier.toFixed(2)} = ${winAmount.toFixed(8)} APT won!`);
+        notification.success(`Congratulations! ${currentBet} APTC × ${actualMultiplier.toFixed(2)} = ${winAmount.toFixed(8)} APTC won!`);
       }
 
       // Store history entry
@@ -328,6 +340,8 @@ export default function Home() {
         color: wheelSegmentData.color
       };
 
+     
+
       setGameHistory(prev => [newHistoryItem, ...prev]);
 
       // Adjust bet for next round based on win/loss increase
@@ -338,7 +352,11 @@ export default function Home() {
       }
 
       // Clamp bet to balance
-      // if (currentBet > balance) currentBet = balance; // This line is no longer needed
+      currentBalance = parseFloat(userBalance || '0');
+      if (currentBet > currentBalance) {
+        console.log(`💰 Bet amount ${currentBet.toFixed(5)} exceeds balance ${currentBalance.toFixed(5)}, clamping to balance`);
+        currentBet = currentBalance;
+      }
       if (currentBet <= 0) currentBet = initialBetAmount;
 
       // Stop conditions
@@ -364,7 +382,7 @@ export default function Home() {
     };
     
     return (
-      <div className="relative text-white px-4 md:px-8 lg:px-20 mb-8 pt-20 md:pt-24 mt-4">
+      <div className="relative text-white px-4 md:px-8 lg:px-20 mb-8 pt-28 md:pt-32 mt-4">
         {/* Background Elements */}
         <div className="absolute top-5 -right-32 w-64 h-64 bg-red-500/10 rounded-full blur-3xl"></div>
         <div className="absolute top-28 left-1/3 w-32 h-32 bg-green-500/10 rounded-full blur-2xl"></div>
@@ -506,7 +524,7 @@ export default function Home() {
 
 
   return (
-    <div className="min-h-screen bg-[#070005] text-white pb-20">
+    <div className="min-h-screen bg-[#070005] text-white pb-20 game-page-container">
       {/* Header */}
       {renderHeader()}
 
@@ -550,26 +568,39 @@ export default function Home() {
         </div>
       </div>
       
-      {/* Video Section */}
-      <WheelVideo />
+      {/* Video and Description Section */}
+      <div className="px-4 md:px-8 lg:px-20 my-12">
+        <div className="flex flex-col lg:flex-row gap-8">
+          <div className="w-full lg:w-1/2">
+            <WheelVideo />
+          </div>
+          <div className="w-full lg:w-1/2">
+            <WheelDescription />
+          </div>
+        </div>
+      </div>
       
-      {/* Game Description */}
-      <WheelDescription />
+      {/* Strategy Guide and Probabilities Section */}
+      <div className="px-4 md:px-8 lg:px-20 my-12">
+        <div className="flex flex-col lg:flex-row gap-8">
+          <div className="w-full lg:w-1/2">
+            <WheelStrategyGuide />
+          </div>
+          <div className="w-full lg:w-1/2">
+            <WheelProbability />
+          </div>
+        </div>
+      </div>
       
-      {/* Strategy Guide */}
-      <WheelStrategyGuide />
+      {/* Payouts and History Section */}
+      <div className="px-4 md:px-8 lg:px-20 my-12">
+        <div className="flex flex-col gap-12">
+          <WheelPayouts />
+          <WheelHistory gameHistory={gameHistory} />
+        </div>
+      </div>
+
       
-      {/* Win Probabilities */}
-      <WheelProbability />
-      
-      {/* Payouts */}
-      <WheelPayouts />
-      
-      {/* Game History */}
-      <WheelHistory gameHistory={gameHistory} />
     </div>
   );
 }
-
-
-

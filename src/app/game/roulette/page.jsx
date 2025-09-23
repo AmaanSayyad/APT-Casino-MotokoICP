@@ -3146,6 +3146,7 @@ export default function GameRoulette() {
           <Grid container spacing={4} sx={{ mb: 7 }}>
             {/* Video on left */}
             <Grid xs={12} md={6}>
+              
               <Box
                 sx={{
                   position: 'relative',
@@ -3198,29 +3199,22 @@ export default function GameRoulette() {
                   }}
                 >
                 </Box>
-                <Box
-                  sx={{
+                <iframe
+                  src={`https://www.youtube.com/embed/${gameData.youtube}?si=${gameData.youtube}`}
+                  title={`${gameData.title} Tutorial`}
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  style={{
                     position: 'absolute',
                     top: 0,
                     left: 0,
                     width: '100%',
                     height: '100%',
                     borderRadius: '12px',
-                    background: 'linear-gradient(135deg, rgba(220, 38, 38, 0.1), rgba(239, 68, 68, 0.05))',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    border: '1px solid rgba(220, 38, 38, 0.2)',
                     zIndex: 1
                   }}
-                >
-                  <Typography variant="h6" color="white" textAlign="center">
-                    🎰 Roulette Tutorial<br />
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                      Learn the basics of European Roulette and master your betting strategy
-                    </Typography>
-                  </Typography>
-                </Box>
+                />
               </Box>
             </Grid>
 
@@ -3264,7 +3258,6 @@ export default function GameRoulette() {
                 >
                   European Roulette
                 </Typography>
-
                 <Typography
                   variant="body1"
                   sx={{
@@ -3275,7 +3268,7 @@ export default function GameRoulette() {
                     textShadow: '0 1px 2px rgba(0,0,0,0.3)',
                   }}
                 >
-                  European Roulette with a single zero and just 2.7% house edge - better odds than traditional casinos. Provably fair and powered by blockchain technology.
+                  European Roulette with a single zero and absolutely no house edge - 100% fair odds for players. Completely provably fair and powered by ICP blockchain technology with no possibility of result manipulation.
                 </Typography>
 
                 <Typography
@@ -3294,8 +3287,8 @@ export default function GameRoulette() {
             </Grid>
           </Grid>
 
-          {/* First row - Strategy Guide and Win Probabilities (most important for players) */}
-          <Grid container spacing={4} sx={{ mb: 6, pt: 4 }}>
+           {/* First row - Strategy Guide and Win Probabilities (most important for players) */}
+           <Grid container spacing={4} sx={{ mb: 6, pt: 4 }}>
             <Grid xs={12} md={7}>
               <div id="strategy" className="scroll-mt-16">
                 <StrategyGuide />
@@ -3327,8 +3320,8 @@ export default function GameRoulette() {
             </Grid>
           </Grid>
 
-          {/* Decorative elements */}
-          <Box
+            {/* Decorative elements */}
+            <Box
             sx={{
               position: 'absolute',
               top: '400px',
@@ -3356,32 +3349,6 @@ export default function GameRoulette() {
           />
         </Box>
 
-        <Snackbar
-          open={showNotification}
-          autoHideDuration={6000}
-          onClose={handleCloseNotification}
-          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-          sx={{ zIndex: 10001 }}
-        >
-          <MuiAlert
-            onClose={handleCloseNotification}
-            severity={notificationIndex === notificationSteps.RESULT_READY ? (winnings > 0 ? "success" : "error") : "info"}
-            elevation={6}
-            variant="filled"
-            sx={{ width: '100%', backgroundColor: 'background.paper', color: 'text.primary' }}
-          >
-            {notificationMessage}
-            {notificationIndex === notificationSteps.RESULT_READY && (
-              <Typography>
-                {winnings > 0
-                  ? `🎉 You won ${winnings.toFixed(4)} APTC!`
-                  : winnings < 0
-                  ? `💸 You lost ${Math.abs(winnings).toFixed(4)} APTC!`
-                  : "🤝 Break even!"}
-              </Typography>
-            )}
-          </MuiAlert>
-        </Snackbar>
 
         {/* Sound control button - add near the top of the UI */}
         <Box sx={{ position: 'fixed', top: 15, right: 15, zIndex: 100 }}>
@@ -3400,18 +3367,46 @@ export default function GameRoulette() {
 
         {/* Snackbar for notifications */}
         <Snackbar
-          open={snackbarOpen}
+          open={snackbarOpen || showNotification}
           autoHideDuration={6000}
-          onClose={() => setSnackbarOpen(false)}
+          onClose={() => {
+            setSnackbarOpen(false);
+            handleCloseNotification();
+          }}
           anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+          sx={{ zIndex: 10001 }}
         >
           <MuiAlert
-            onClose={() => setSnackbarOpen(false)}
-            severity="info"
+            onClose={() => {
+              setSnackbarOpen(false);
+              handleCloseNotification();
+            }}
+            severity={
+              showNotification && notificationIndex === notificationSteps.RESULT_READY 
+                ? (winnings > 0 ? "success" : "error") 
+                : "info"
+            }
             elevation={6}
             variant="filled"
+            sx={{ width: '100%', backgroundColor: 'background.paper', color: 'text.primary' }}
           >
-            {snackbarMessage}
+            {showNotification 
+              ? (
+                <>
+                  {notificationMessage}
+                  {notificationIndex === notificationSteps.RESULT_READY && (
+                    <Typography>
+                      {winnings > 0
+                        ? `🎉 You won ${winnings.toFixed(4)} APTC!`
+                        : winnings < 0
+                        ? `💸 You lost ${Math.abs(winnings).toFixed(4)} APTC!`
+                        : "🤝 Break even!"}
+                    </Typography>
+                  )}
+                </>
+              ) 
+              : snackbarMessage
+            }
           </MuiAlert>
         </Snackbar>
 

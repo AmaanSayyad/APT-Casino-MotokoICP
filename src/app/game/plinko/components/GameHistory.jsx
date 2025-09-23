@@ -4,29 +4,6 @@ import { useState } from "react";
 export default function GameHistory({ history }) {
   const [visibleCount, setVisibleCount] = useState(5);
   
-  // Format transaction hash for display
-  const formatTxHash = (hash) => {
-    if (!hash) return 'N/A';
-    return `${hash.slice(0, 6)}...${hash.slice(-4)}`;
-  };
-  
-  // Open Arbiscan link
-  const openArbiscan = (hash) => {
-    if (hash) {
-      const network = process.env.NEXT_PUBLIC_NETWORK || 'arbitrum-sepolia';
-      let explorerUrl;
-      
-      if (network === 'arbitrum-sepolia') {
-        explorerUrl = `https://sepolia.arbiscan.io/tx/${hash}`;
-      } else if (network === 'arbitrum-one') {
-        explorerUrl = `https://arbiscan.io/tx/${hash}`;
-      } else {
-        explorerUrl = `https://sepolia.etherscan.io/tx/${hash}`;
-      }
-      
-      window.open(explorerUrl, '_blank');
-    }
-  };
 
   return (
     <div>
@@ -64,9 +41,6 @@ export default function GameHistory({ history }) {
               <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">
                 Payout
               </th>
-              <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">
-                VRF Proof
-              </th>
             </tr>
           </thead>
           <tbody>
@@ -97,32 +71,6 @@ export default function GameHistory({ history }) {
                     <div className="w-4 h-4 bg-yellow-500 rounded-full"></div>
                     <span className="text-white text-sm">{game.payout}</span>
                   </div>
-                </td>
-                <td className="py-3 px-4">
-                  {game.vrfProof ? (
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-green-400 font-mono">
-                          {game.vrfProof.requestId ? 
-                            `${game.vrfProof.requestId.slice(0, 6)}...${game.vrfProof.requestId.slice(-4)}` : 
-                            'N/A'
-                          }
-                        </span>
-                        <button
-                          onClick={() => openArbiscan(game.vrfProof.transactionHash)}
-                          className="text-blue-400 hover:text-blue-300 text-xs underline"
-                          title="View on Arbiscan"
-                        >
-                          TX
-                        </button>
-                      </div>
-                      <div className="text-xs text-gray-400">
-                        Log: #{game.vrfProof.logIndex || 0}
-                      </div>
-                    </div>
-                  ) : (
-                    <span className="text-gray-500 text-xs">No proof</span>
-                  )}
                 </td>
               </tr>
             ))}

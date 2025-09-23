@@ -457,16 +457,6 @@ const WheelHistory = ({ gameHistory = [] }) => {
               >
                 Result
               </TableCell>
-              <TableCell 
-                sx={{ 
-                  backgroundColor: 'rgba(0,0,0,0.4)',
-                  color: 'white',
-                  fontWeight: 'bold',
-                  borderBottom: '1px solid rgba(104, 29, 219, 0.2)'
-                }}
-              >
-                VRF Proof
-              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -566,61 +556,6 @@ const WheelHistory = ({ gameHistory = [] }) => {
                     }}
                   >
                         {item.payout > 0 ? `+${item.payout}` : '0'}
-                  </TableCell>
-                  <TableCell 
-                    sx={{ 
-                      borderBottom: '1px solid rgba(104, 29, 219, 0.1)'
-                    }}
-                  >
-                        {item.vrfProof ? (
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Chip 
-                            icon={<FaCheck size={10} />}
-                            label={item.vrfProof.requestId ? 
-                                  `${item.vrfProof.requestId.slice(0, 6)}...${item.vrfProof.requestId.slice(-4)}` : 
-                                  'N/A'
-                                }
-                            size="small"
-                            sx={{ 
-                              backgroundColor: 'rgba(20, 216, 84, 0.1)',
-                              border: '1px solid rgba(20, 216, 84, 0.2)',
-                              color: '#14D854',
-                              fontSize: '0.7rem',
-                              height: 20,
-                              '& .MuiChip-icon': {
-                                color: '#14D854',
-                                fontSize: '0.7rem',
-                              }
-                            }}
-                          />
-                          <Button
-                                onClick={() => openEtherscan(item.vrfProof.transactionHash)}
-                            size="small"
-                            startIcon={<FaExternalLinkAlt size={10} />}
-                            sx={{ 
-                              color: '#681DDB',
-                              fontSize: '0.7rem',
-                              minWidth: 'auto',
-                              p: 0,
-                              '&:hover': {
-                                backgroundColor: 'transparent',
-                                textDecoration: 'underline',
-                              }
-                            }}
-                          >
-                            TX
-                          </Button>
-                        </Box>
-                        <Typography variant="caption" color="rgba(255,255,255,0.5)">
-                              Log: #{item.vrfProof.logIndex || 0}
-                        </Typography>
-                      </Box>
-                    ) : (
-                      <Typography variant="caption" color="rgba(255,255,255,0.3)">
-                        No proof
-                      </Typography>
-                    )}
                   </TableCell>
                 </TableRow>
               </Fade>

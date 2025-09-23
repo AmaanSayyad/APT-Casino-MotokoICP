@@ -147,7 +147,7 @@ const RoulettePayout = () => {
         color="rgba(255,255,255,0.7)"
         sx={{ mb: 3, mt: 1 }}
       >
-        European Roulette offers a 2.7% house edge across all bets. See payout ratios below:
+        Our ICP-powered European Roulette offers completely fair odds with no house edge. See payout ratios below:
       </Typography>
       
       <Box sx={{ overflowX: 'auto' }}>
@@ -286,7 +286,7 @@ const RoulettePayout = () => {
       >
         <FaExclamationTriangle color="#d82633" size={16} style={{ flexShrink: 0 }} />
         <Typography variant="body2" color="rgba(255,255,255,0.8)">
-          European Roulette (single zero) offers a better 2.7% house edge compared to American Roulette's 5.26% edge (double zero).
+          Our European Roulette (single zero) on ICP blockchain offers completely fair odds with no house edge and fully verifiable outcomes.
         </Typography>
       </Box>
     </Paper>

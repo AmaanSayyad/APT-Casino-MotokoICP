@@ -344,7 +344,7 @@ const WheelStrategyGuide = () => {
       >
         <FaExclamationTriangle color="#d82633" size={20} style={{ flexShrink: 0 }} />
         <Typography variant="body2" color="rgba(255,255,255,0.8)">
-          <strong>Important:</strong> These strategies can enhance entertainment but cannot overcome the house edge. Always gamble responsibly and set clear limits for your play.
+          <strong>Important:</strong> These strategies can enhance entertainment value. Our ICP-powered wheel game has no house edge and offers completely fair odds with verifiable outcomes. Always gamble responsibly and set clear limits for your play.
         </Typography>
       </Box>
     </Paper>

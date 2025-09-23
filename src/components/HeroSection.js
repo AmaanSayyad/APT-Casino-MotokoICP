@@ -76,7 +76,7 @@ export default function HeroSection() {
           <div className="text-center hidden md:block">
             <p className="text-gray-400 text-sm">Active Games</p>
             <p className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-magic to-blue-magic">
-              {isDev ? '3' : '14'}
+              {isDev ? '4' : '14'}
             </p>
           </div>
         </div>

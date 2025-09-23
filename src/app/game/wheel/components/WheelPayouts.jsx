@@ -34,11 +34,11 @@ const WheelPayouts = () => {
       color: '#D82633',
       examples: [
         { bet: 100, multiplier: '0.0x', payout: 0, profit: -100, segments: [10, 20, 30, 40, 50] },
-        { bet: 100, multiplier: '9.9x', payout: 990, profit: 890, segments: [10] },
-        { bet: 100, multiplier: '19.8x', payout: 1980, profit: 1880, segments: [20] },
-        { bet: 100, multiplier: '29.7x', payout: 2970, profit: 2870, segments: [30] },
-        { bet: 100, multiplier: '39.6x', payout: 3960, profit: 3860, segments: [40] },
-        { bet: 100, multiplier: '49.5x', payout: 4950, profit: 4850, segments: [50] }
+        { bet: 100, multiplier: '10.0x', payout: 1000, profit: 900, segments: [10] },
+        { bet: 100, multiplier: '20.0x', payout: 2000, profit: 1900, segments: [20] },
+        { bet: 100, multiplier: '30.0x', payout: 3000, profit: 2900, segments: [30] },
+        { bet: 100, multiplier: '40.0x', payout: 4000, profit: 3900, segments: [40] },
+        { bet: 100, multiplier: '50.0x', payout: 5000, profit: 4900, segments: [50] }
       ]
     }
   };
@@ -180,7 +180,7 @@ const WheelPayouts = () => {
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
               <Chip 
-                label="100 ARB" 
+                label="100 APTC" 
                 sx={{ 
                   bgcolor: 'rgba(0,0,0,0.3)', 
                   color: 'white',
@@ -200,7 +200,7 @@ const WheelPayouts = () => {
               />
               <FaEquals color="#FFA500" />
               <Chip 
-                label={`${parseFloat(getMaxMultiplier(riskLevels[activeTab].key)) * 100} ARB`}
+                label={`${parseFloat(getMaxMultiplier(riskLevels[activeTab].key)) * 100} APTC`}
                 sx={{ 
                   bgcolor: 'rgba(20, 216, 84, 0.2)', 
                   color: '#14D854',
@@ -225,7 +225,7 @@ const WheelPayouts = () => {
               Maximum Payout
             </Typography>
             <Typography variant="body2" color="rgba(255,255,255,0.7)" sx={{ mb: 1 }}>
-              Maximum payout: 1,000,000 ARB per spin.
+              Maximum payout: 1,000,000 APTC per spin.
             </Typography>
             <Typography variant="body2" color="rgba(255,255,255,0.5)" sx={{ fontSize: '0.8rem' }}>
               With {selectedSegments} segments, high risk offers up to {getMaxMultiplier('highRisk')} multiplier.
@@ -283,10 +283,10 @@ const WheelPayouts = () => {
             }}
           >
             <Typography variant="caption" color="rgba(255,255,255,0.6)">
-              0x multiplier = loss of bet (100 ARB)
+              0x multiplier = loss of bet (100 APTC)
             </Typography>
             <Typography variant="caption" fontWeight="bold" color="#e74c3c">
-              -100 ARB
+              -100 APTC
             </Typography>
           </Box>
           
@@ -314,7 +314,7 @@ const WheelPayouts = () => {
                     <Typography variant="subtitle2" color="rgba(255,255,255,0.7)">Multiplier</Typography>
                   </Box>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                    <Typography variant="subtitle1" fontWeight="bold" color="white">{example.bet} ARB</Typography>
+                    <Typography variant="subtitle1" fontWeight="bold" color="white">{example.bet} APTC</Typography>
                     <Typography 
                       variant="subtitle1" 
                       fontWeight="bold" 
@@ -332,14 +332,14 @@ const WheelPayouts = () => {
                   </Box>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                     <Typography variant="subtitle1" fontWeight="bold" color="#FFA500">
-                      {example.payout} ARB
+                      {example.payout} APTC
                     </Typography>
                     <Typography 
                       variant="subtitle1" 
                       fontWeight="bold" 
                       color="#14D854"
                     >
-                      +{example.profit} ARB
+                      +{example.profit} APTC
                     </Typography>
                   </Box>
                 </Box>
