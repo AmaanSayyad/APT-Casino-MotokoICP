@@ -2,7 +2,13 @@
 const nextConfig = {
   transpilePackages: ['three'],
   images: {
-    domains: ['images.unsplash.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        pathname: '**',
+      },
+    ],
   },
   // Performance optimizations
   poweredByHeader: false,

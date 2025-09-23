@@ -214,7 +214,7 @@ const RouletteWithHistory = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Bet Amount (ETH)
+              Bet Amount (APTC)
             </label>
             <input
               type="number"

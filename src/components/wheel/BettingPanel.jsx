@@ -54,7 +54,7 @@ const BettingPanel = ({
           <span className="text-sm text-gray-300">Balance:</span>
           {isConnected ? (
             <span className="text-sm text-green-300 font-medium">
-              {balance.toFixed(5)} ETH
+              {balance.toFixed(5)} APTC
             </span>
           ) : (
             <span className="text-sm text-red-300 font-medium">

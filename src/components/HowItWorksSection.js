@@ -1,7 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
 import GradientBorderButton from './GradientBorderButton';
-import AptosConnectWalletButton from './AptosConnectWalletButton';
 
 const HowItWorksSection = () => {
   const [activeStep, setActiveStep] = useState(1);
@@ -108,14 +107,11 @@ const HowItWorksSection = () => {
               ))}
               
               <div className="mt-6 flex justify-center lg:justify-start">
-                {activeStep === 1 ? (
-                  <AptosConnectWalletButton />
-                ) : (
-                  <GradientBorderButton className="transform hover:scale-105 transition-transform">
-                    {activeStep === 2 ? 'Get APTC Tokens' : 
-                     activeStep === 3 ? 'Browse Games' : 'View Rewards'}
-                  </GradientBorderButton>
-                )}
+                <GradientBorderButton classes="transform hover:scale-105 transition-transform">
+                  {activeStep === 1 ? 'Connect ICP Wallet' : 
+                   activeStep === 2 ? 'Get APTC Tokens' : 
+                   activeStep === 3 ? 'Browse Games' : 'View Rewards'}
+                </GradientBorderButton>
               </div>
             </div>
           </div>
